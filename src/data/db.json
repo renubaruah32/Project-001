@@ -1,0 +1,173 @@
+{
+  "users": [
+    {
+      "id": "99757fe3-caab-42a4-b71c-e63ec4f52e1c",
+      "user_id": "99757fe3-caab-42a4-b71c-e63ec4f52e1c",
+      "full_name": "Koko",
+      "username": "Koko",
+      "email": "Koko@example.com",
+      "phone": "",
+      "avatar": "lady-vip",
+      "security_id": "",
+      "balance": 0,
+      "bonus_balance": 0,
+      "referral_code": "TENZO_ROYAL_77",
+      "referred_by": "",
+      "vip_level": "1",
+      "status": "Active",
+      "kyc_status": "Approved",
+      "created_at": "2026-06-28T18:51:48.342Z",
+      "balance_version": 0
+    },
+    {
+      "id": "c93b5042-1463-4ff1-93f1-deff9151722c",
+      "user_id": "c93b5042-1463-4ff1-93f1-deff9151722c",
+      "full_name": "baruahb5000",
+      "username": "baruahb5000",
+      "email": "baruahb5000@gmail.com",
+      "phone": "",
+      "avatar": "",
+      "security_id": "",
+      "balance": 0,
+      "bonus_balance": 0,
+      "referral_code": "TENZO_ROYAL_77",
+      "referred_by": "",
+      "vip_level": "1",
+      "status": "Active",
+      "kyc_status": "Approved",
+      "created_at": "2026-06-28T20:32:09.903Z",
+      "balance_version": 0
+    }
+  ],
+  "deposits": [],
+  "withdrawals": [],
+  "referrals": [],
+  "vip_levels_config": [
+    {
+      "level": "Bronze",
+      "req_deposit": 0,
+      "req_turnover": 0,
+      "reward_percentage": 1,
+      "max_daily_withdraw": 50000
+    },
+    {
+      "level": "Silver",
+      "req_deposit": 10000,
+      "req_turnover": 50000,
+      "reward_percentage": 2,
+      "max_daily_withdraw": 100000
+    },
+    {
+      "level": "Gold",
+      "req_deposit": 50000,
+      "req_turnover": 250000,
+      "reward_percentage": 5,
+      "max_daily_withdraw": 250000
+    },
+    {
+      "level": "Platinum",
+      "req_deposit": 200000,
+      "req_turnover": 1000000,
+      "reward_percentage": 8,
+      "max_daily_withdraw": 500000
+    },
+    {
+      "level": "Diamond",
+      "req_deposit": 1000000,
+      "req_turnover": 5000000,
+      "reward_percentage": 12,
+      "max_daily_withdraw": 1000000
+    }
+  ],
+  "games": [
+    {
+      "id": "aviator",
+      "name": "Aviator",
+      "category": "crash",
+      "image": "",
+      "enabled": true,
+      "rtp": 98.7,
+      "house_edge": 1.3,
+      "live_players": 4820,
+      "odds_multiplier": 100
+    },
+    {
+      "id": "chicken-road",
+      "name": "Crossfire Chicken",
+      "category": "slots",
+      "image": "",
+      "enabled": true,
+      "rtp": 97.5,
+      "house_edge": 2.5,
+      "live_players": 3240,
+      "odds_multiplier": 10
+    },
+    {
+      "id": "fortune-wheel",
+      "name": "Fortune Wheel 3D",
+      "category": "slots",
+      "image": "",
+      "enabled": true,
+      "rtp": 97.9,
+      "house_edge": 2.1,
+      "live_players": 4120,
+      "odds_multiplier": 50
+    },
+    {
+      "id": "mines",
+      "name": "Mines Outpost",
+      "category": "crash",
+      "image": "",
+      "enabled": true,
+      "rtp": 96.8,
+      "house_edge": 3.2,
+      "live_players": 2810,
+      "odds_multiplier": 5
+    },
+    {
+      "id": "plinko",
+      "name": "Plinko Strike",
+      "category": "crash",
+      "image": "",
+      "enabled": true,
+      "rtp": 99.1,
+      "house_edge": 0.9,
+      "live_players": 5400,
+      "odds_multiplier": 1000
+    },
+    {
+      "id": "roulette",
+      "name": "Neon Roulette",
+      "category": "table",
+      "image": "",
+      "enabled": true,
+      "rtp": 98.2,
+      "house_edge": 1.8,
+      "live_players": 1950,
+      "odds_multiplier": 36
+    }
+  ],
+  "notifications": [],
+  "audit_logs": [
+    {
+      "id": "log-406637",
+      "action": "Failed admin login attempt as: super_admin",
+      "admin_user": "Anonymous",
+      "ip_address": "127.0.0.1",
+      "device_info": "node-fetch",
+      "timestamp": "2026-06-29T04:13:26.637Z"
+    }
+  ],
+  "global_settings": {
+    "referral_commission_percentage": 10,
+    "automatic_deposit_approval": false,
+    "hero_cta_type": "deposit",
+    "hero_poster_url": "",
+    "hero_heading": "",
+    "hero_subheading": ""
+  },
+  "hero_images": [],
+  "game_icons": [],
+  "banners": [],
+  "logos": []
+}

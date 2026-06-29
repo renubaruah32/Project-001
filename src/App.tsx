@@ -961,16 +961,16 @@ export default function App() {
   const hasFloatingHeader = !isSportsViewActive && !activePlayGame && !loadingGame;
 
   return (
-    <div className={`min-h-screen w-full max-w-full overflow-x-hidden ${isSportsViewActive ? 'pb-16 bg-[#FAFAFA] text-[#111111]' : 'pb-28 bg-[#05060A] text-white'} flex flex-col items-center select-none transition-colors duration-300`}>
+    <div className={`min-h-screen w-full max-w-full overflow-x-hidden ${isSportsViewActive ? 'pb-16 bg-[#FAFAFA] text-[#111111]' : 'pb-28 bg-[#050505] text-white'} flex flex-col items-center select-none transition-colors duration-300`}>
       {/* Container sizing redesigned to be full-screen, removing the old max-w-md mobile frame limit! */}
-      <div className={`w-full max-w-full min-h-screen overflow-x-hidden ${isSportsViewActive ? 'bg-[#FAFAFA]' : 'bg-[#05060A]'} flex flex-col relative transition-colors duration-300`}>
+      <div className={`w-full max-w-full min-h-screen overflow-x-hidden ${isSportsViewActive ? 'bg-[#FAFAFA]' : 'bg-[#050505]'} flex flex-col relative transition-colors duration-300`}>
         
         {/* Absolute Background Glowing Gradients */}
         {!isSportsViewActive && (
           <>
-            <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-[#FF174F]/10 to-transparent pointer-events-none z-0" />
-            <div className="absolute top-[20%] left-[-50px] w-72 h-72 bg-[#FF174F]/5 rounded-full blur-3xl pointer-events-none animate-pulse" style={{ animationDuration: '6s' }} />
-            <div className="absolute bottom-[20%] right-[-50px] w-72 h-72 bg-[#7B2EFF]/5 rounded-full blur-3xl pointer-events-none animate-pulse" style={{ animationDuration: '8s' }} />
+            <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-[#B4002C]/15 to-transparent pointer-events-none z-0" />
+            <div className="absolute top-[20%] left-[-50px] w-72 h-72 bg-[#FF2348]/5 rounded-full blur-3xl pointer-events-none animate-pulse" style={{ animationDuration: '6s' }} />
+            <div className="absolute bottom-[20%] right-[-50px] w-72 h-72 bg-[#B4002C]/5 rounded-full blur-3xl pointer-events-none animate-pulse" style={{ animationDuration: '8s' }} />
           </>
         )}
 
@@ -983,26 +983,26 @@ export default function App() {
               opacity: isHeaderVisible ? 1 : 0
             }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="fixed top-0 left-0 right-0 z-[9999] h-[84px] bg-[#10131C]/80 backdrop-blur-[24px] px-4 flex items-center justify-between select-none border-b border-[#FF174F]/25 rounded-none shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_15px_rgba(255,23,79,0.08)]"
+            className="fixed top-0 left-0 right-0 z-[9999] h-[84px] bg-[#111111]/90 backdrop-blur-md px-4 flex items-center justify-between select-none border-b border-[#FF2348]/45 rounded-none shadow-[0_4px_35px_rgba(255,35,72,0.35),_0_10px_30px_rgba(0,0,0,0.9)]"
           >
-            {/* Slanted premium geometric design overlay */}
-            <div className="absolute bottom-0 left-0 w-[140px] h-[3px] bg-gradient-to-r from-[#FF174F] to-[#FF4D8D] transform skew-x-12 origin-bottom-left shadow-[0_0_15px_rgba(255,23,79,0.8)]" />
+            {/* Slanted premium geometric design overlay to match the reference image */}
+            <div className="absolute bottom-0 left-0 w-[140px] h-[3px] bg-[#FF2348] transform skew-x-12 origin-bottom-left shadow-[0_0_15px_#FF2348]" />
 
             {/* Left logo and branding */}
             <div className="relative flex items-center gap-2 select-none cursor-pointer" onClick={() => { if (isLoggedIn) { setActiveTab('games'); setGamesSubView('lobby'); } }}>
-              {/* Crimson ambient glow behind the logo */}
-              <div className="absolute -inset-2 bg-[#FF174F]/15 rounded-full blur-xl pointer-events-none -z-10" />
+              {/* Crimson ambient glow behind the logo only */}
+              <div className="absolute -inset-1 bg-[#FF2348]/8 rounded-full blur-lg pointer-events-none -z-10" />
               
               {/* Styled Slanted Modern TF Logo in Neon Crimson Red */}
               {globalSettings?.logo_url ? (
                 <img
                   src={globalSettings.logo_url}
                   alt="Logo"
-                  className="w-[44px] h-[44px] object-contain shrink-0 filter drop-shadow-[0_2px_5px_rgba(0,0,0,0.6)]"
+                  className="w-[44px] h-[44px] object-contain shrink-0 filter drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.5)]"
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <svg className="w-[44px] h-[44px] shrink-0 filter drop-shadow-[0_2px_8px_rgba(255,23,79,0.5)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg className="w-[44px] h-[44px] shrink-0 filter drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.5)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                   {/* Slanted Stylized T Part in Red Gradient */}
                   <path 
                     d="M 22 20 H 95 L 91.5 34 H 54 L 42.5 80 H 26.5 L 38 34 H 18.5 L 20 28 H 58 L 59.5 24 H 21 L 22 20 Z" 
@@ -1015,80 +1015,61 @@ export default function App() {
                   />
                   <defs>
                     <linearGradient id="header-logo-grad-red" x1="20" y1="20" x2="95" y2="80" gradientUnits="userSpaceOnUse">
-                      <stop stopColor="#FF174F" />
-                      <stop offset="1" stopColor="#FF4D8D" />
+                      <stop stopColor="#FF2348" />
+                      <stop offset="1" stopColor="#B4002C" />
                     </linearGradient>
                     <linearGradient id="header-logo-grad-white" x1="49.5" y1="38" x2="87.5" y2="80" gradientUnits="userSpaceOnUse">
                       <stop stopColor="#FFFFFF" />
-                      <stop offset="1" stopColor="#B8BEC9" />
+                      <stop offset="1" stopColor="#E2E8F0" />
                     </linearGradient>
                   </defs>
                 </svg>
               )}
               {/* White + Neon Crimson branding */}
-              <div className="flex flex-col justify-center select-none">
-                <span className="font-sora font-black italic text-[20px] tracking-wider text-white leading-none">TENZO</span>
-                <span className="font-sora font-black italic text-[14px] tracking-widest text-[#FF174F] uppercase leading-none mt-1">247</span>
+              <div className="flex flex-col justify-center">
+                <span className="font-sans font-black italic text-[18px] tracking-wider text-white leading-none">TENZO</span>
+                <span className="font-sans font-black italic text-[13px] tracking-widest text-[#FF2348] uppercase leading-none mt-0.5">247</span>
               </div>
             </div>
 
-            {/* Right: Wallet/Login/Notifications Section */}
-            <div className="flex items-center gap-3.5 shrink-0 select-none">
+            {/* Right: Wallet/Login/Logout Section */}
+            <div className="flex items-center gap-3 shrink-0 select-none">
               {isLoggedIn ? (
                 <>
-                  {/* Glowing Notification icon */}
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    className="relative w-9 h-9 rounded-xl bg-[#10131C] border border-white/5 flex items-center justify-center cursor-pointer hover:border-[#FF174F]/30 shadow-md transition-all shrink-0"
-                    onClick={() => {
-                      playClick();
-                      alert("You have 0 new notifications. Stay tuned for exclusive loyalty offers!");
-                    }}
-                  >
-                    <Bell className="w-4 h-4 text-[#B8BEC9] hover:text-white filter drop-shadow-[0_0_4px_rgba(255,23,79,0.3)]" />
-                    {/* Glowing pulse indicator dot */}
-                    <span className="absolute top-1 right-1 flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF174F] opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF174F]"></span>
-                    </span>
-                  </motion.div>
-
                   {/* Center: Premium Wallet Balance Capsule Card */}
-                  <div className="relative flex items-center bg-[#10131C]/90 border border-[#FF174F]/25 rounded-2xl pl-3 pr-1 py-1.5 gap-2.5 shadow-[0_4px_15px_rgba(255,23,79,0.15)] h-[42px] select-none shrink-0">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Wallet className="w-4 h-4 text-[#FF174F] shrink-0 filter drop-shadow-[0_0_6px_rgba(255,23,79,0.5)]" />
+                  <div className="relative flex items-center bg-[#161616]/90 border border-[#FF2348]/25 rounded-full pl-3 pr-1 py-1 gap-2 sm:gap-2.5 shadow-[0_0_15px_rgba(255,35,72,0.1)] h-[38px] select-none shrink-0">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <Wallet className="w-3.5 h-3.5 text-[#FF2348] shrink-0 filter drop-shadow-[0_0_3px_rgba(255,35,72,0.5)]" />
                       
                       <div className="relative flex items-center min-w-0">
                         {user.isBalanceLoading ? (
                           <div className="flex items-center gap-1.5 py-0.5">
                             <span className="relative flex h-1.5 w-1.5">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF174F] opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#FF174F]"></span>
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
                             </span>
-                            <span className="font-sora font-extrabold text-[10px] uppercase tracking-wider text-[#B8BEC9] leading-none">Loading...</span>
+                            <span className="font-sans font-bold text-[10px] uppercase tracking-wider text-zinc-400 leading-none">Loading...</span>
                           </div>
                         ) : (
-                          <span className="font-mono font-extrabold text-[14px] tracking-wide inline-block text-[#FFD54F] leading-none whitespace-nowrap">
+                          <span className="font-sans font-extrabold text-[12px] tracking-wider inline-block text-white leading-none whitespace-nowrap">
                             {formatBalance(user.walletBalance)}
                           </span>
                         )}
                       </div>
                     </div>
 
-                    {/* Add Money button - glowing gradient */}
+                    {/* Add Money button - glossy red finish */}
                     <motion.button
                       onClick={() => {
                         playClick();
                         setBankPresetTab('deposit');
                         setActiveTab('bank');
                       }}
-                      whileHover={{ scale: 1.05, boxShadow: '0 0 15px rgba(255,23,79,0.5)' }}
                       whileTap={{ scale: 0.95 }}
-                      className="relative overflow-hidden bg-gradient-to-r from-[#FF174F] to-[#FF4D8D] text-white text-[10.5px] font-sora font-extrabold italic px-3.5 py-1.5 rounded-xl border-none shadow-[0_0_12px_rgba(255,23,79,0.4)] transition-all duration-300 cursor-pointer flex items-center justify-center gap-1 shrink-0 h-[30px]"
+                      className="relative overflow-hidden bg-gradient-to-r from-[#FF2348] to-[#B4002C] text-white text-[10px] font-sans font-black italic px-3 py-1 rounded-full border-none shadow-[0_0_15px_rgba(255,35,72,0.65),_0_0_4px_#FF2348] hover:shadow-[0_0_25px_rgba(255,35,72,0.85),_0_0_8px_#FF2348] transition-all duration-300 cursor-pointer flex items-center justify-center gap-1 shrink-0 h-[28px]"
                     >
-                      <Plus className="w-3 h-3 stroke-[3] text-white shrink-0" />
-                      <span className="tracking-wider uppercase">ADD</span>
+                      <Plus className="w-2.5 h-2.5 stroke-[3] text-white shrink-0" />
+                      <span className="tracking-wide uppercase">ADD</span>
                     </motion.button>
                   </div>
                 </>
@@ -1099,11 +1080,10 @@ export default function App() {
                     playClick();
                     setShowLoginModal(true);
                   }}
-                  whileHover={{ scale: 1.05, boxShadow: '0 0 15px rgba(255,23,79,0.5)' }}
                   whileTap={{ scale: 0.95 }}
-                  className="relative overflow-hidden bg-gradient-to-r from-[#FF174F] to-[#FF4D8D] text-white text-[12px] font-sora font-extrabold italic px-5 py-2 rounded-xl border-none shadow-[0_0_15px_rgba(255,23,79,0.5)] transition-all duration-300 cursor-pointer flex items-center justify-center shrink-0 h-[38px]"
+                  className="relative overflow-hidden bg-gradient-to-r from-[#FF2348] to-[#B4002C] text-white text-[11px] font-sans font-black italic px-5 py-1.5 rounded-full border-none shadow-[0_0_15px_rgba(255,35,72,0.65),_0_0_4px_#FF2348] hover:shadow-[0_0_25px_rgba(255,35,72,0.9),_0_0_8px_#FF2348] transition-all duration-300 cursor-pointer flex items-center justify-center shrink-0 h-[34px]"
                 >
-                  <span className="tracking-wider uppercase">LOGIN</span>
+                  <span className="tracking-wide uppercase">LOGIN</span>
                 </motion.button>
               )}
             </div>
@@ -1252,18 +1232,18 @@ export default function App() {
             className="fixed bottom-4 inset-x-3 mx-auto w-[calc(100%-24px)] max-w-[420px] z-40 select-none pb-safe"
           >
             {/* Ambient crimson lighting underneath the bar */}
-            <div className="absolute -inset-1 bg-[#FF174F]/20 rounded-[24px] blur-xl pointer-events-none -z-20 animate-pulse" />
-            <div className="absolute -inset-1.5 bg-black/50 rounded-[24px] blur-md pointer-events-none -z-30" />
+            <div className="absolute -inset-1 bg-[#FF2348]/25 rounded-[24px] blur-xl pointer-events-none -z-20 animate-pulse" />
+            <div className="absolute -inset-1.5 bg-black/45 rounded-[24px] blur-md pointer-events-none -z-30" />
             
-            <nav className="relative w-full h-[64px] bg-[#10131C]/80 backdrop-blur-[24px] backdrop-saturate-[1.8] border border-white/5 rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_15px_rgba(255,23,79,0.1)] flex items-center justify-between px-2 overflow-visible">
+            <nav className="relative w-full h-[64px] bg-[#111111]/80 backdrop-blur-[24px] backdrop-saturate-[1.8] border border-[#FF2348]/40 rounded-[24px] shadow-[0_4px_35px_rgba(255,35,72,0.45)] flex items-center justify-between px-2 overflow-visible">
               {/* Dark luxury background overlay */}
-              <div className="absolute inset-0 bg-gradient-to-b from-[#10131C]/95 to-[#05060A]/98 rounded-[24px] -z-10" />
+              <div className="absolute inset-0 bg-gradient-to-b from-[#111111]/95 to-[#050505]/98 rounded-[24px] -z-10" />
               
               {/* Subtle top light reflection highlight */}
-              <div className="absolute top-0 inset-x-5 h-[1px] bg-gradient-to-r from-transparent via-[#FF174F]/30 to-transparent pointer-events-none" />
+              <div className="absolute top-0 inset-x-5 h-[1px] bg-gradient-to-r from-transparent via-[#FF2348]/30 to-transparent pointer-events-none" />
               
               {/* Subtle diagonal reflection shine */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-[#FF174F]/3 to-transparent pointer-events-none rounded-[24px]" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-[#FF2348]/3 to-transparent pointer-events-none rounded-[24px]" />
 
               {[
                 { id: 'games', label: 'Games', icon: <Gamepad2 className="w-[19px] h-[19px]" /> },
@@ -1281,22 +1261,22 @@ export default function App() {
                 if (navItem.id === 'wheel') {
                   const isWheelActive = activeTab === 'wheel';
                   return (
-                    <div key="wheel-center" className="relative -top-3.5 flex flex-col items-center justify-center w-[60px] select-none shrink-0 overflow-visible">
+                    <div key="wheel-center" className="relative -top-3 flex flex-col items-center justify-center w-[60px] select-none shrink-0 overflow-visible">
                       {/* Pulse ring animation container */}
                       <motion.div
                         className="absolute -inset-1 rounded-full pointer-events-none -z-10"
                         animate={isWheelActive ? {
                           boxShadow: [
-                            '0 0 12px rgba(255, 23, 79, 0.4)',
-                            '0 0 30px rgba(255, 23, 79, 0.95)',
-                            '0 0 12px rgba(255, 23, 79, 0.4)'
+                            '0 0 12px rgba(255, 35, 72, 0.4)',
+                            '0 0 30px rgba(255, 35, 72, 0.95)',
+                            '0 0 12px rgba(255, 35, 72, 0.4)'
                           ],
                           scale: [1, 1.05, 1]
                         } : {
                           boxShadow: [
-                            '0 0 6px rgba(255, 23, 79, 0.15)',
-                            '0 0 18px rgba(255, 23, 79, 0.5)',
-                            '0 0 6px rgba(255, 23, 79, 0.15)'
+                            '0 0 6px rgba(255, 35, 72, 0.15)',
+                            '0 0 18px rgba(255, 35, 72, 0.5)',
+                            '0 0 6px rgba(255, 35, 72, 0.15)'
                           ],
                           scale: 1
                         }}
@@ -1318,32 +1298,31 @@ export default function App() {
                           setActiveTab('wheel');
                         }}
                         onMouseEnter={() => playHover()}
-                        whileHover={{ scale: 1.08 }}
-                        whileTap={{ scale: 0.92, translateY: 0.5 }}
-                        className={`w-[54px] h-[54px] rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 relative overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.6),_inset_0_1px_1px_rgba(255,255,255,0.15)] border ${
+                        whileTap={{ scale: 0.90, translateY: 0.5 }}
+                        className={`w-[50px] h-[50px] rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 relative overflow-hidden shadow-[0_6px_18px_rgba(0,0,0,0.6),_inset_0_1px_1px_rgba(255,255,255,0.15)] border ${
                           isWheelActive 
-                            ? 'bg-gradient-to-tr from-[#FF174F] to-[#FF4D8D] border-transparent'
-                            : 'bg-gradient-to-b from-[#181D28] to-[#10131C] border-[#FF174F]/35 hover:border-[#FF174F]/60'
+                            ? 'bg-gradient-to-tr from-[#FF2348] to-[#B4002C] border-[#FF2348]'
+                            : 'bg-gradient-to-b from-[#1c1c1c] to-[#0d0d0d] border-[#FF2348]/25 hover:border-[#FF2348]/50'
                         }`}
                       >
                         {/* Premium Lucky Wheel decorative spokes inside background */}
-                        <svg className="absolute inset-0 w-full h-full opacity-40 pointer-events-none animate-spin-slow" viewBox="0 0 100 100">
-                          <circle cx="50" cy="50" r="45" stroke={isWheelActive ? '#ffffff' : '#FF174F'} strokeWidth="1" fill="none" />
-                          <line x1="50" y1="5" x2="50" y2="95" stroke={isWheelActive ? '#ffffff' : '#FF174F'} strokeWidth="1" />
-                          <line x1="5" y1="50" x2="95" y2="50" stroke={isWheelActive ? '#ffffff' : '#FF174F'} strokeWidth="1" />
-                          <line x1="18" y1="18" x2="82" y2="82" stroke={isWheelActive ? '#ffffff' : '#FF174F'} strokeWidth="1" />
-                          <line x1="18" y1="82" x2="82" y2="18" stroke={isWheelActive ? '#ffffff' : '#FF174F'} strokeWidth="1" />
+                        <svg className={`absolute inset-0 w-full h-full opacity-35 pointer-events-none animate-spin-slow`} viewBox="0 0 100 100">
+                          <circle cx="50" cy="50" r="45" stroke={isWheelActive ? '#ffffff' : '#FF2348'} strokeWidth="1" fill="none" />
+                          <line x1="50" y1="5" x2="50" y2="95" stroke={isWheelActive ? '#ffffff' : '#FF2348'} strokeWidth="1" />
+                          <line x1="5" y1="50" x2="95" y2="50" stroke={isWheelActive ? '#ffffff' : '#FF2348'} strokeWidth="1" />
+                          <line x1="18" y1="18" x2="82" y2="82" stroke={isWheelActive ? '#ffffff' : '#FF2348'} strokeWidth="1" />
+                          <line x1="18" y1="82" x2="82" y2="18" stroke={isWheelActive ? '#ffffff' : '#FF2348'} strokeWidth="1" />
                         </svg>
                         
                         {/* Inner polished surface */}
                         <div className={`absolute inset-1 rounded-full flex items-center justify-center transition-all duration-300 shadow-[inset_0_0.5px_0.5px_rgba(255,255,255,0.1)] ${
                           isWheelActive 
                             ? 'bg-gradient-to-b from-[#3a0a14] to-[#140206] border border-black/30' 
-                            : 'bg-gradient-to-b from-[#181D28] to-[#05060A] border border-white/5'
+                            : 'bg-gradient-to-b from-[#1c1c1c] to-[#080808] border border-white/5'
                         }`}>
                           {/* Embossed Compass icon */}
                           <Compass className={`w-6 h-6 transition-all duration-300 drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.85)] ${
-                            isWheelActive ? 'text-[#FFD54F] scale-110 drop-shadow-[0_0_8px_rgba(255,213,79,0.5)]' : 'text-[#B8BEC9] hover:text-white'
+                            isWheelActive ? 'text-[#FF2348] scale-110' : 'text-white/60 hover:text-white'
                           }`} />
                         </div>
                         
@@ -1352,8 +1331,8 @@ export default function App() {
                       </motion.button>
                       
                       {/* Balanced, highly readable label text */}
-                      <span className={`font-sora text-[9.5px] font-extrabold tracking-wider transition-colors mt-1 ${
-                        isWheelActive ? 'text-[#FF174F]' : 'text-[#B8BEC9]'
+                      <span className={`font-sans text-[9.5px] font-semibold tracking-wide transition-colors mt-1 ${
+                        isWheelActive ? 'text-white font-bold' : 'text-white/65'
                       }`}>
                         Wheel
                       </span>
@@ -1383,17 +1362,17 @@ export default function App() {
                     }}
                     whileTap={{ scale: 0.94 }}
                     onMouseEnter={() => playHover()}
-                    className="relative flex-1 flex flex-col items-center justify-center gap-1.5 py-0.5 transition-all duration-300 cursor-pointer h-full"
+                    className="relative flex-1 flex flex-col items-center justify-center gap-1 py-0.5 transition-all duration-300 cursor-pointer h-full"
                   >
                     {/* Soft circular glowing halo behind active icon */}
                     <AnimatePresence>
                       {isTabActive && (
                         <motion.div 
-                           initial={{ opacity: 0, scale: 0.7 }}
+                          initial={{ opacity: 0, scale: 0.7 }}
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.7 }}
                           transition={{ duration: 0.25 }}
-                          className="absolute w-12 h-12 bg-[#FF174F]/10 rounded-full blur-md -z-10 animate-pulse"
+                          className="absolute w-12 h-12 bg-[#FF2348]/15 rounded-full blur-md -z-10 animate-pulse"
                         />
                       )}
                     </AnimatePresence>
@@ -1401,15 +1380,15 @@ export default function App() {
                     {/* Premium icon with high contrast active/inactive states */}
                     <div className={`transition-all duration-300 flex items-center justify-center ${
                       isTabActive 
-                        ? 'text-[#FF174F] scale-105 drop-shadow-[0_0_8px_rgba(255,23,79,0.5)]' 
-                        : 'text-[#B8BEC9] hover:text-white'
+                        ? 'text-[#FF2348] scale-105 drop-shadow-[0_0_8px_rgba(255,35,72,0.5)]' 
+                        : 'text-white/60 hover:text-white'
                     }`}>
                       {navItem.icon}
                     </div>
 
                     {/* High readability label text */}
-                    <span className={`font-sora text-[9.5px] font-extrabold tracking-wider transition-all duration-300 ${
-                      isTabActive ? 'text-white' : 'text-[#B8BEC9]/70'
+                    <span className={`font-sans text-[9.5px] font-semibold tracking-wide transition-all duration-300 ${
+                      isTabActive ? 'text-white font-bold' : 'text-white/65'
                     }`}>
                       {navItem.label}
                     </span>
@@ -1423,7 +1402,7 @@ export default function App() {
                           animate={{ opacity: 1, width: 18 }}
                           exit={{ opacity: 0, width: 0 }}
                           transition={{ duration: 0.25, ease: 'easeOut' }}
-                          className="absolute bottom-0.5 h-[2.5px] rounded-full bg-[#FF174F] shadow-[0_0_8px_#FF174F,0_0_3px_#FF174F]"
+                          className="absolute bottom-0.5 h-[2px] rounded-full bg-[#FF2348] shadow-[0_0_8px_#FF2348,0_0_3px_#FF2348]"
                         />
                       )}
                     </AnimatePresence>

@@ -320,7 +320,7 @@ async function startServer() {
                 fileSizeLimit: 20971520 // 20 MB
               });
               if (cError) {
-                console.error("[Supabase Storage] Error creating 'assets' bucket:", cError.message);
+                console.warn("[Supabase Storage] Note: Could not create 'assets' bucket (expected if using Anon key):", cError.message);
               } else {
                 console.log("[Supabase Storage] Created 'assets' bucket successfully with image/* and audio/* allowed.");
               }
@@ -332,16 +332,16 @@ async function startServer() {
                 fileSizeLimit: 20971520
               });
               if (uError) {
-                console.error("[Supabase Storage] Error updating 'assets' bucket:", uError.message);
+                console.warn("[Supabase Storage] Note: Could not update 'assets' bucket (expected if using Anon key):", uError.message);
               } else {
                 console.log("[Supabase Storage] Updated 'assets' bucket allowedMimeTypes successfully.");
               }
             }
           } else if (bError) {
-            console.error("[Supabase Storage] Error listing buckets during startup:", bError.message);
+            console.warn("[Supabase Storage] Note: Could not list buckets during startup (expected if using Anon key):", bError.message);
           }
         } catch (err) {
-          console.error("[Supabase Storage] Exception verifying/creating assets bucket:", err);
+          console.warn("[Supabase Storage] Exception verifying/creating assets bucket (handled gracefully):", err);
         }
       }
     } catch (err: any) {

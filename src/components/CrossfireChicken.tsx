@@ -11,10 +11,16 @@ const VIRTUAL_WIDTH = 500;
 const VIRTUAL_HEIGHT = 500;
 
 const MULTIPLIERS = {
-  easy: [1.13, 1.30, 1.50, 1.72, 1.98],
-  medium: [1.23, 1.54, 1.93, 2.41, 3.02],
-  hard: [1.35, 1.80, 2.40, 3.20, 4.25],
-  hardcore: [1.50, 2.10, 3.20, 5.00, 8.00]
+  easy: [1.10, 1.22, 1.35, 1.50, 1.66, 1.84, 2.04, 2.26, 2.50, 2.80],
+  medium: [1.20, 1.44, 1.72, 2.07, 2.48, 2.98, 3.58, 4.30, 5.16, 6.20],
+  hard: [1.35, 1.82, 2.46, 3.32, 4.48, 6.05, 8.17, 11.03, 14.89, 20.10],
+  hardcore: [1.50, 2.25, 3.38, 5.06, 7.59, 11.39, 17.09, 25.63, 38.44, 57.66]
+};
+
+const getMultiplier = (lane: number, diff: 'easy' | 'medium' | 'hard' | 'hardcore'): number => {
+  if (lane <= 0) return 0;
+  const idx = Math.min(lane - 1, 9);
+  return MULTIPLIERS[diff][idx];
 };
 
 const MIN_BET = 3;
@@ -298,8 +304,10 @@ export default function CrossfireChicken({ user, onUpdateUser, onAddTransaction,
   const [gameSeed, setGameSeed] = useState<string>('0c3156b7-f363-46d4-ac7a-e081d654b34d');
   
   const [gameState, setGameState] = useState<'idle' | 'playing' | 'crashed' | 'collected'>('idle');
-  const [chickenLane, setChickenLane] = useState<number>(0); // 0 = start grass, 1..5 = roads, 6 = win grass
+  const [chickenLane, setChickenLane] = useState<number>(0); // 0 = start grass, 1..10 = roads, 11 = win grass
   const [isMuted, setIsMuted] = useState<boolean>(sound.getMute());
+  const [preDecidedCrashLane, setPreDecidedCrashLane] = useState<number | null>(null);
+  const cameraXRef = useRef<number>(0);
   
   const [insufficientBalance, setInsufficientBalance] = useState<boolean>(false);
   const [history, setHistory] = useState<any[]>([]);
@@ -437,6 +445,17 @@ export default function CrossfireChicken({ user, onUpdateUser, onAddTransaction,
     setChickenLane(0);
     setGameState('playing');
     
+    // Reset camera scroll
+    cameraXRef.current = 0;
+
+    // Pre-decide if user will win or lose!
+    // Win rate based on difficulty
+    const winRate = difficulty === 'easy' ? 0.65 : difficulty === 'medium' ? 0.45 : difficulty === 'hard' ? 0.25 : 0.10;
+    const isWin = Math.random() < winRate;
+    // If lose, crash on random lane 1 to 10
+    const crashLane = isWin ? null : Math.floor(Math.random() * 10) + 1;
+    setPreDecidedCrashLane(crashLane);
+    
     // Reset positions
     chickenPosRef.current = {
       x: 40,
@@ -444,6 +463,9 @@ export default function CrossfireChicken({ user, onUpdateUser, onAddTransaction,
       hopProgress: 1.0,
       targetX: 40
     };
+
+    // Re-seed vehicles cleanly
+    seedVehicles();
 
     // Clean up particles
     particlesRef.current = [];
@@ -461,6 +483,35 @@ export default function CrossfireChicken({ user, onUpdateUser, onAddTransaction,
     chickenPosRef.current.targetX = targetX;
     chickenPosRef.current.hopProgress = 0.0;
     setChickenLane(nextLane);
+
+    // Filter out vehicles in nextLane if it's not the crash lane to ensure no vehicle enters the chicken's lane
+    if (nextLane !== preDecidedCrashLane) {
+      vehiclesRef.current = vehiclesRef.current.filter(v => v.lane !== nextLane);
+    } else {
+      // Force a vehicle in the crash lane to be close and collide with the chicken!
+      const crashV = vehiclesRef.current.find(v => v.lane === nextLane);
+      if (crashV) {
+        crashV.y = crashV.direction === 1 ? 250 - 50 : 250 + 50;
+        crashV.speed = 10;
+      } else {
+        const types: ('scooter' | 'car' | 'police' | 'bus' | 'truck')[] = ['scooter', 'car', 'police', 'bus', 'truck'];
+        const type = types[Math.floor(Math.random() * types.length)];
+        const dir = (nextLane % 2 === 0) ? 1 : -1;
+        const dims = getVehicleDimensions(type);
+        vehiclesRef.current.push({
+          x: getLaneCenterX(nextLane),
+          y: dir === 1 ? 250 - 50 : 250 + 50,
+          lane: nextLane,
+          type,
+          speed: 10,
+          width: dims.w,
+          height: dims.h,
+          color: getVehicleColor(type),
+          bounceOffset: Math.random() * 100,
+          direction: dir
+        });
+      }
+    }
 
     // Spawn gold trail dust particles
     for (let i = 0; i < 8; i++) {
@@ -482,7 +533,7 @@ export default function CrossfireChicken({ user, onUpdateUser, onAddTransaction,
     if (gameState !== 'playing') return;
     if (chickenLane === 0) return; // Cannot collect on starting lane
 
-    const mult = MULTIPLIERS[difficulty][chickenLane - 1];
+    const mult = getMultiplier(chickenLane, difficulty);
     const winnings = Math.floor(betAmount * mult);
 
     sound.playCollect();
@@ -577,11 +628,9 @@ export default function CrossfireChicken({ user, onUpdateUser, onAddTransaction,
   // --- POSITION MAPPINGS ---
   const getLaneCenterX = (lane: number): number => {
     if (lane === 0) return 40; // Grass start
-    if (lane === 6) return 460; // Grass safe finish
-    // Roads center are spaced between X=80 and X=420
-    const startX = 80;
-    const roadWidth = 340 / 5; // 68px each road
-    return startX + (lane - 1) * roadWidth + roadWidth / 2;
+    const laneWidth = 105;
+    if (lane === 11) return 80 + 10 * laneWidth + 60; // Grass safe finish
+    return 80 + (lane - 1) * laneWidth + laneWidth / 2;
   };
 
   // --- RENDERING LOOP ---
@@ -627,9 +676,9 @@ export default function CrossfireChicken({ user, onUpdateUser, onAddTransaction,
     const list: Vehicle[] = [];
     const types: ('scooter' | 'car' | 'police' | 'bus' | 'truck')[] = ['scooter', 'car', 'police', 'bus', 'truck'];
 
-    for (let l = 1; l <= 5; l++) {
+    for (let l = 1; l <= 10; l++) {
       const type = types[(l - 1) % types.length];
-      const dir = 1; // All move top-to-bottom (direction = 1)
+      const dir = (l % 2 === 0) ? 1 : -1; // alternating direction
       const speed = getVehicleSpeed(type);
       const dimensions = getVehicleDimensions(type);
 
@@ -697,6 +746,10 @@ export default function CrossfireChicken({ user, onUpdateUser, onAddTransaction,
       setScreenShake(prev => Math.max(0, prev - 0.5));
     }
 
+    // Camera scroll interpolation (clamped between 0 and 780 for 10-lane broader world)
+    const targetCameraX = Math.min(780, Math.max(0, chickenPos.x - 180));
+    cameraXRef.current += (targetCameraX - cameraXRef.current) * 0.08;
+
     // 2. Interpolate Chicken Hop Movement
     if (chickenPos.hopProgress < 1.0) {
       chickenPos.hopProgress += 0.08; // smooth hop speed (takes ~12 frames)
@@ -704,10 +757,10 @@ export default function CrossfireChicken({ user, onUpdateUser, onAddTransaction,
         chickenPos.hopProgress = 1.0;
         chickenPos.x = chickenPos.targetX;
 
-        // Reached Lane 6 safely: Automatic absolute victory celebration!
-        if (chickenLane === 6 && gameState === 'playing') {
+        // Reached Lane 11 safely: Automatic absolute victory celebration!
+        if (chickenLane === 11 && gameState === 'playing') {
           sound.playWin();
-          const maxMult = MULTIPLIERS[difficulty][4];
+          const maxMult = MULTIPLIERS[difficulty][9];
           const finalWin = Math.floor(betAmount * maxMult);
 
           // Give rewards
@@ -755,17 +808,24 @@ export default function CrossfireChicken({ user, onUpdateUser, onAddTransaction,
 
     // 3. Update Vehicles
     vehicles.forEach(v => {
-      // Move vertically
-      v.y += v.speed * v.direction;
+      const isChickenInThisLane = chickenLane === v.lane;
+      const isThisCrashLane = v.lane === preDecidedCrashLane;
 
-      // Wrap-around screen bounds
-      if (v.direction === 1 && v.y > VIRTUAL_HEIGHT + 60) {
-        v.y = -v.height - 20;
-        // Randomize speed/type slightly to change pattern
-        v.speed = getVehicleSpeed(v.type) * (0.85 + Math.random() * 0.3);
-      } else if (v.direction === -1 && v.y < -v.height - 60) {
-        v.y = VIRTUAL_HEIGHT + 20;
-        v.speed = getVehicleSpeed(v.type) * (0.85 + Math.random() * 0.3);
+      if (isChickenInThisLane && !isThisCrashLane) {
+        // Hide the vehicle off-screen so the lane is safe
+        v.y = -999;
+      } else {
+        // Move vertically
+        v.y += v.speed * v.direction;
+
+        // Wrap-around screen bounds
+        if (v.direction === 1 && v.y > VIRTUAL_HEIGHT + 60) {
+          v.y = -v.height - 20;
+          v.speed = getVehicleSpeed(v.type) * (0.85 + Math.random() * 0.3);
+        } else if (v.direction === -1 && v.y < -v.height - 60) {
+          v.y = VIRTUAL_HEIGHT + 20;
+          v.speed = getVehicleSpeed(v.type) * (0.85 + Math.random() * 0.3);
+        }
       }
     });
 
@@ -784,6 +844,9 @@ export default function CrossfireChicken({ user, onUpdateUser, onAddTransaction,
       const chickBottom = chickY + chickenH / 2;
 
       vehicles.forEach(v => {
+        // Ignore off-screen vehicles
+        if (v.y === -999) return;
+
         // Tight 80% boundary check for maximum fairness
         const shrinkW = v.width * 0.85;
         const shrinkH = v.height * 0.85;
@@ -830,18 +893,24 @@ export default function CrossfireChicken({ user, onUpdateUser, onAddTransaction,
       ctx.translate(dx, dy);
     }
 
-    // 1. Draw Asphalt Roadbed Background
+    // Get current camera scroll
+    const cameraX = cameraXRef.current;
+    ctx.translate(-cameraX, 0);
+
+    const laneWidth = 105;
+    const maxVisibleLanes = Math.min(10, Math.max(4, chickenLane + 3));
+
+    // 1. Draw Asphalt Roadbed Background up to max visible lanes (extends when chicken crosses!)
     ctx.fillStyle = '#7C746C'; // Warm grey-brown asphalt exactly like the 2nd image
-    ctx.fillRect(80, 0, 340, VIRTUAL_HEIGHT);
+    ctx.fillRect(80, 0, maxVisibleLanes * laneWidth, VIRTUAL_HEIGHT);
 
     // Draw lane dividing dash stripes
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)'; // High-contrast white lane stripes
     ctx.lineWidth = 2.5;
     ctx.setLineDash([12, 18]);
 
-    const roadWidth = 340 / 5;
-    for (let l = 1; l < 5; l++) {
-      const x = 80 + l * roadWidth;
+    for (let l = 1; l < maxVisibleLanes; l++) {
+      const x = 80 + l * laneWidth;
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, VIRTUAL_HEIGHT);
@@ -854,10 +923,10 @@ export default function CrossfireChicken({ user, onUpdateUser, onAddTransaction,
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.font = '900 11px "Inter", "Space Grotesk", sans-serif';
-    MULTIPLIERS[difficulty].forEach((mult, idx) => {
-      const laneNum = idx + 1;
+    for (let laneNum = 1; laneNum <= maxVisibleLanes; laneNum++) {
       const x = getLaneCenterX(laneNum);
       const isPassed = chickenLane >= laneNum;
+      const mult = getMultiplier(laneNum, difficulty);
       
       if (isPassed) {
         // Active/Passed lanes: luminous neon green with a clean neon glow effect
@@ -870,7 +939,7 @@ export default function CrossfireChicken({ user, onUpdateUser, onAddTransaction,
         ctx.shadowBlur = 0;
       }
       ctx.fillText(`${mult.toFixed(2)}x`, x, 250);
-    });
+    }
     ctx.restore();
 
     // 2. Draw Start/Finish Grass zones
@@ -893,12 +962,13 @@ export default function CrossfireChicken({ user, onUpdateUser, onAddTransaction,
     ctx.fillStyle = '#D4AF37'; 
     ctx.fillRect(77, 0, 3, VIRTUAL_HEIGHT);
 
-    // Right Finish Zone
+    // Right Finish Zone (drawn at the end of the 10th lane)
+    const finishX = 80 + 10 * laneWidth;
     ctx.fillStyle = '#557A46'; // Forest green finish lane
-    ctx.fillRect(420, 0, 80, VIRTUAL_HEIGHT);
+    ctx.fillRect(finishX, 0, 150, VIRTUAL_HEIGHT);
     // Right decorative pathway border
     ctx.fillStyle = '#FF3333';
-    ctx.fillRect(420, 0, 3, VIRTUAL_HEIGHT);
+    ctx.fillRect(finishX, 0, 3, VIRTUAL_HEIGHT);
 
     // Render little houses/fences in start zone
     drawDecorativeAssets(ctx);
@@ -958,8 +1028,8 @@ export default function CrossfireChicken({ user, onUpdateUser, onAddTransaction,
     drawChicken(ctx, chick.x, 250 - hopArc, 20, isIdle, timeRef.current);
 
     // Green text multiplier underneath chicken (e.g., `x 1.13` drawn in Screenshot 2)
-    if (chickenLane > 0 && chickenLane < 6) {
-      const activeMult = MULTIPLIERS[difficulty][chickenLane - 1];
+    if (chickenLane > 0 && chickenLane < 11) {
+      const activeMult = getMultiplier(chickenLane, difficulty);
       ctx.save();
       ctx.fillStyle = '#FF3333';
       ctx.font = 'black 13px "Inter", sans-serif';
@@ -1496,7 +1566,7 @@ export default function CrossfireChicken({ user, onUpdateUser, onAddTransaction,
 
   const getActiveWinnings = (): number => {
     if (chickenLane === 0) return 0;
-    const mult = MULTIPLIERS[difficulty][chickenLane - 1];
+    const mult = getMultiplier(chickenLane, difficulty);
     return Math.floor(betAmount * mult);
   };
 
@@ -1546,21 +1616,21 @@ export default function CrossfireChicken({ user, onUpdateUser, onAddTransaction,
         
         {/* 2. TOP HEADER ROW (BALANCE & THREE SQUARE GOLD BUTTONS) */}
         <div className="flex items-center justify-between w-full">
-          {/* Balance card */}
-          <div className="bg-[#1C1C1C] border border-[#2A2A2A] rounded px-3 py-1.5 flex items-center justify-between w-[58%] h-11">
-            <span className="text-white font-bold text-base font-sans">
+          {/* Balance card (aligned to left, made smaller) */}
+          <div className="bg-[#1C1C1C] border border-[#2A2A2A] rounded px-2.5 py-1 flex items-center justify-between w-[40%] h-8">
+            <span className="text-white font-bold text-xs font-sans">
               {user.walletBalance.toFixed(2)}
             </span>
-            <span className="text-white font-extrabold text-[11px] tracking-wide ml-3">
+            <span className="text-white font-extrabold text-[9px] tracking-wide ml-2">
               INR
             </span>
           </div>
 
-          {/* Three small square icon buttons with thin gold borders */}
-          <div className="flex items-center gap-2">
+          {/* Three small square icon buttons (aligned to right, made smaller) */}
+          <div className="flex items-center gap-1.5 justify-end">
             {/* Gentleman Avatar / Profile Button */}
-            <div className="w-10 h-10 bg-black border border-[#D8A35D] rounded flex items-center justify-center cursor-pointer hover:brightness-110 active:scale-95 transition-all shadow-[0_0_10px_rgba(216,163,93,0.2)]">
-              <svg viewBox="0 0 100 100" className="w-5 h-5 text-[#D8A35D] fill-current">
+            <div className="w-7 h-7 bg-black border border-[#D8A35D]/80 rounded flex items-center justify-center cursor-pointer hover:brightness-110 active:scale-95 transition-all shadow-[0_0_8px_rgba(216,163,93,0.15)]">
+              <svg viewBox="0 0 100 100" className="w-3.5 h-3.5 text-[#D8A35D] fill-current">
                 <path d="M50,15 C58,15 62,20 62,24 C62,28 58,30 50,30 C42,30 38,28 38,24 C38,20 42,15 50,15 Z M25,40 L75,40 C78,40 80,41 80,43 C80,45 78,46 75,46 L68,46 L65,75 C64,80 58,84 50,84 C42,84 36,80 35,75 L32,46 L25,46 C22,46 20,45 20,43 C20,41 22,40 25,40 Z" />
               </svg>
             </div>
@@ -1568,19 +1638,19 @@ export default function CrossfireChicken({ user, onUpdateUser, onAddTransaction,
             {/* Sound Button */}
             <button
               onClick={() => setIsMuted(prev => !prev)}
-              className="w-10 h-10 bg-black border border-[#D8A35D] rounded flex items-center justify-center cursor-pointer hover:brightness-110 active:scale-95 transition-all shadow-[0_0_10px_rgba(216,163,93,0.2)]"
+              className="w-7 h-7 bg-black border border-[#D8A35D]/80 rounded flex items-center justify-center cursor-pointer hover:brightness-110 active:scale-95 transition-all shadow-[0_0_8px_rgba(216,163,93,0.15)]"
             >
               {isMuted ? (
-                <VolumeX className="w-4 h-4 text-[#D8A35D]/60" />
+                <VolumeX className="w-3.5 h-3.5 text-[#D8A35D]/60" />
               ) : (
-                <Volume2 className="w-4 h-4 text-[#D8A35D]" />
+                <Volume2 className="w-3.5 h-3.5 text-[#D8A35D]" />
               )}
             </button>
 
             {/* Help Button */}
             <button
               onClick={() => setShowHelp(prev => !prev)}
-              className="w-10 h-10 bg-black border border-[#D8A35D] rounded flex items-center justify-center cursor-pointer hover:brightness-110 active:scale-95 transition-all shadow-[0_0_10px_rgba(216,163,93,0.2)] text-[#D8A35D] font-extrabold text-sm"
+              className="w-7 h-7 bg-black border border-[#D8A35D]/80 rounded flex items-center justify-center cursor-pointer hover:brightness-110 active:scale-95 transition-all shadow-[0_0_8px_rgba(216,163,93,0.15)] text-[#D8A35D] font-extrabold text-xs"
             >
               ?
             </button>
@@ -1666,7 +1736,7 @@ export default function CrossfireChicken({ user, onUpdateUser, onAddTransaction,
                   COLLECTED REWARDS!
                 </span>
                 <p className="text-[11px] text-stone-300 font-medium tracking-tight">
-                  Won <span className="text-[#9AF34A] font-black">{formatBalance(getActiveWinnings())} INR</span> at <span className="text-yellow-400 font-black">{(MULTIPLIERS[difficulty][chickenLane - 1] || 1).toFixed(2)}x Coef!</span>
+                  Won <span className="text-[#9AF34A] font-black">{formatBalance(getActiveWinnings())} INR</span> at <span className="text-yellow-400 font-black">{getMultiplier(chickenLane, difficulty).toFixed(2)}x Coef!</span>
                 </p>
                 <button
                   onClick={startGame}

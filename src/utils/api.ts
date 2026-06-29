@@ -3,6 +3,9 @@
  * that need to talk to the custom Cloud Run backend.
  */
 export function getApiUrl(path: string): string {
+  if (typeof window !== 'undefined') {
+    return path; // Always use relative paths in browser context to avoid any CORS/DNS issues
+  }
   if (path.startsWith('/api/')) {
     let apiUrl = '';
     try {
@@ -13,6 +16,7 @@ export function getApiUrl(path: string): string {
       const env = (import.meta as any).env || {};
       apiUrl = env["VITE_API_URL"] || '';
     }
+
     if (apiUrl) {
       const cleanApiUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
       return `${cleanApiUrl}${path}`;
@@ -53,7 +57,12 @@ export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Pr
         `[API Fetch] Failed to fetch from custom API endpoint ${String(finalInput)}. Retrying with local relative path ${originalPath}...`,
         err
       );
-      return await window.fetch(originalPath, init);
+      try {
+        return await window.fetch(originalPath, init);
+      } catch (fallbackErr) {
+        console.error(`[API Fetch] Local fallback also failed:`, fallbackErr);
+        throw fallbackErr;
+      }
     }
     throw err;
   }

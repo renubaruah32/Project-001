@@ -71,9 +71,6 @@ export default function ReferralTab({
   const [referralVaultBalance, setReferralVaultBalance] = useState<number>(850); // Available withdrawable referral money
   const [showNotification, setShowNotification] = useState<string | null>(null);
 
-  // Sub-tabs for the Banking Dashboard: "dashboard" or "add-methods" or "invite"
-  const [activeDashboardSection, setActiveDashboardSection] = useState<'hub' | 'invite'>('hub');
-
   // Bank & UPI Saved Accounts List
   const [savedBanks, setSavedBanks] = useState<SavedBank[]>([
     { id: 'bank-1', bankName: 'State Bank of India', holderName: user.username || 'High Roller', accountNo: '•••• •••• 5824', ifsc: 'SBIN0001042' }
@@ -459,36 +456,8 @@ export default function ReferralTab({
         )}
       </AnimatePresence>
 
-      {/* Main Dual Tab Navigation: Dashboard / Invite Links */}
-      <div className="flex bg-[#111111] p-1 rounded-xl border border-white/5">
-        <button
-          onClick={() => { playClick(); setActiveDashboardSection('hub'); }}
-          className={`flex-1 py-3 rounded-lg font-sans font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-            activeDashboardSection === 'hub' 
-              ? 'bg-[#FF2348] text-white shadow-[0_4px_12px_rgba(255,35,72,0.25)]' 
-              : 'text-zinc-400 hover:text-white'
-          }`}
-        >
-          <span>Dashboard</span>
-        </button>
-        <button
-          onClick={() => { playClick(); setActiveDashboardSection('invite'); }}
-          className={`flex-1 py-3 rounded-lg font-sans font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-            activeDashboardSection === 'invite' 
-              ? 'bg-[#FF2348] text-white shadow-[0_4px_12px_rgba(255,35,72,0.25)]' 
-              : 'text-zinc-400 hover:text-white'
-          }`}
-        >
-          <Share2 className="w-4 h-4" />
-          <span>Invite & Earn</span>
-        </button>
-      </div>
-
-      {activeDashboardSection === 'hub' ? (
-        // ==========================================
-        //  BANKING DASHBOARD VIEW
-        // ==========================================
-        <div className="space-y-4">
+      {/* Banking Dashboard view directly rendered */}
+      <div className="space-y-4">
           
           {/* Elite Premium Banking Card Overlay */}
           <div className={`bg-gradient-to-br ${tier.gradient} border border-white/10 p-6 rounded-3xl relative overflow-hidden shadow-2xl space-y-5 transition-all duration-500`}>
@@ -566,304 +535,26 @@ export default function ReferralTab({
             </div>
           </div>
 
-          {/* Bento Stats Display */}
-          <div className="grid grid-cols-2 gap-3.5">
-            {/* Friends Joined */}
-            <div className="bg-gradient-to-br from-[#1a1a22] via-[#121216] to-[#09090b] border border-white/10 p-4.5 rounded-2xl relative overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.06),_0_12px_24px_rgba(0,0,0,0.6)] group hover:border-sky-500/20 transition-all duration-300">
-              <div className="absolute right-3.5 top-3.5 bg-gradient-to-b from-sky-400/20 to-sky-600/5 p-2 rounded-xl text-sky-400 border border-sky-400/30 shadow-[0_2px_8px_rgba(56,189,248,0.15)]">
-                <Users className="w-4 h-4" />
-              </div>
-              <span className="text-[9px] text-zinc-400 font-mono font-black uppercase tracking-[0.15em] block">Affiliate Base</span>
-              <span className="font-sans font-black text-3xl text-white block mt-2.5 tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
-                {simulatedFriendsCount}
-              </span>
-              <span className="text-[8.5px] font-mono text-sky-400 font-black block mt-2 tracking-wider uppercase opacity-90">
-                ● Customers Joined
-              </span>
-            </div>
+      </div>
 
-            {/* Today's Income */}
-            <div className="bg-gradient-to-br from-[#1a1a22] via-[#121216] to-[#09090b] border border-white/10 p-4.5 rounded-2xl relative overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.06),_0_12px_24px_rgba(0,0,0,0.6)] group hover:border-[#FF2348]/20 transition-all duration-300">
-              <div className="absolute right-3.5 top-3.5 bg-gradient-to-b from-amber-400/20 to-amber-600/5 p-2 rounded-xl text-amber-400 border border-amber-400/30 shadow-[0_2px_8px_rgba(245,158,11,0.15)]">
-                <TrendingUp className="w-4 h-4" />
-              </div>
-              <span className="text-[9px] text-zinc-400 font-mono font-black uppercase tracking-[0.15em] block">Today's Earnings</span>
-              <span className="font-sans font-black text-3xl text-[#FF2348] block mt-2.5 tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
-                {formatCurrency(simulatedTodayIncome)}
-              </span>
-              <span className="text-[8.5px] font-mono text-emerald-400 font-black block mt-2 tracking-wider uppercase opacity-90">
-                ● Passive Commissions
-              </span>
-            </div>
-          </div>
-
-          {/* Linked Payment Methods & Dashboard Accounts */}
-          <div className="bg-gradient-to-b from-[#16161c] to-[#0a0a0d] border-2 border-[#ffd700]/10 p-5 rounded-3xl shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.05),_0_15px_30px_rgba(0,0,0,0.7)] space-y-4 relative overflow-hidden">
-            {/* Elegant luxury shine lines */}
-            <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[#ffd700]/20 to-transparent pointer-events-none" />
-            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-400/[0.02] rounded-full blur-3xl pointer-events-none" />
-
-            <div className="flex justify-between items-center border-b border-white/5 pb-3">
-              <div>
-                <h3 className="text-xs font-black uppercase tracking-[0.1em] text-amber-200">Linked Withdraw Channels</h3>
-                <p className="text-[8.5px] text-zinc-400 tracking-wide mt-0.5">Configure your direct withdrawal channels.</p>
-              </div>
-              <div className="bg-black/40 px-2.5 py-1 rounded-md border border-white/5">
-                <span className="text-[7.5px] font-mono font-black text-zinc-500 tracking-wider">SECURE NODE</span>
-              </div>
-            </div>
-
-            {/* TWO SIMPLE AND COMPACT BUTTONS */}
-            <div className="grid grid-cols-2 gap-3.5">
-              
-              {/* UPI BUTTON */}
-              <button
-                onClick={() => { playClick(); setWithdrawChannelPopup('upi'); }}
-                className="group relative bg-gradient-to-br from-[#121215] via-[#0d0d10] to-[#060608] border border-white/10 hover:border-amber-400/40 rounded-2xl p-4 transition-all duration-300 flex flex-col items-start gap-1 cursor-pointer text-left shadow-[0_4px_12px_rgba(0,0,0,0.5),_inset_0_1px_1px_rgba(255,255,255,0.02)] overflow-hidden hover:scale-[1.02]"
-              >
-                {/* Micro tech card patterns */}
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.005)_1px,transparent_1px)] bg-[size:10px_10px] pointer-events-none opacity-40" />
-                
-                <div className="flex items-center justify-between w-full relative z-10">
-                  <span className="text-[10px] font-black text-zinc-300 uppercase tracking-widest flex items-center gap-2 group-hover:text-white transition-colors">
-                    <Smartphone className="w-3.5 h-3.5 text-amber-400" /> UPI Wallet
-                  </span>
-                  {savedUpis.length > 0 ? (
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.7)]" />
-                  ) : (
-                    <span className="text-[7.5px] font-mono font-black text-[#FF2348] border border-[#FF2348]/30 px-1.5 py-0.5 rounded bg-[#FF2348]/5 uppercase">Link</span>
-                  )}
-                </div>
-                <div className="mt-2 w-full relative z-10">
-                  {savedUpis.length > 0 ? (
-                    <span className="font-mono text-[10px] text-zinc-400 truncate block font-bold group-hover:text-zinc-200 transition-colors">
-                      {savedUpis[0].upiId}
-                    </span>
-                  ) : (
-                    <span className="text-[8.5px] text-zinc-500 font-mono block">No UPI Address Linked</span>
-                  )}
-                </div>
-                <div className="absolute right-3.5 bottom-3 opacity-0 group-hover:opacity-100 transition-all duration-200 text-amber-400 text-[8px] font-mono font-black uppercase flex items-center gap-0.5">
-                  <span>Manage</span>
-                  <ChevronRight className="w-2.5 h-2.5" />
-                </div>
-              </button>
-
-              {/* BANK BUTTON */}
-              <button
-                onClick={() => { playClick(); setWithdrawChannelPopup('bank'); }}
-                className="group relative bg-gradient-to-br from-[#121215] via-[#0d0d10] to-[#060608] border border-white/10 hover:border-amber-400/40 rounded-2xl p-4 transition-all duration-300 flex flex-col items-start gap-1 cursor-pointer text-left shadow-[0_4px_12px_rgba(0,0,0,0.5),_inset_0_1px_1px_rgba(255,255,255,0.02)] overflow-hidden hover:scale-[1.02]"
-              >
-                {/* Micro tech card patterns */}
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.005)_1px,transparent_1px)] bg-[size:10px_10px] pointer-events-none opacity-40" />
-
-                <div className="flex items-center justify-between w-full relative z-10">
-                  <span className="text-[10px] font-black text-zinc-300 uppercase tracking-widest flex items-center gap-2 group-hover:text-white transition-colors">
-                    <Building className="w-3.5 h-3.5 text-amber-400" /> Bank Payout
-                  </span>
-                  {savedBanks.length > 0 ? (
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.7)]" />
-                  ) : (
-                    <span className="text-[7.5px] font-mono font-black text-[#FF2348] border border-[#FF2348]/30 px-1.5 py-0.5 rounded bg-[#FF2348]/5 uppercase">Link</span>
-                  )}
-                </div>
-                <div className="mt-2 w-full relative z-10">
-                  {savedBanks.length > 0 ? (
-                    <span className="font-sans text-[10px] text-zinc-400 truncate block font-bold group-hover:text-zinc-200 transition-colors">
-                      {savedBanks[0].bankName}
-                    </span>
-                  ) : (
-                    <span className="text-[8.5px] text-zinc-500 font-mono block">No Bank Linked</span>
-                  )}
-                </div>
-                <div className="absolute right-3.5 bottom-3 opacity-0 group-hover:opacity-100 transition-all duration-200 text-amber-400 text-[8px] font-mono font-black uppercase flex items-center gap-0.5">
-                  <span>Manage</span>
-                  <ChevronRight className="w-2.5 h-2.5" />
-                </div>
-              </button>
-
-            </div>
-          </div>
-
-          {/* passbook ledger of affiliate activities */}
-          <div className="bg-gradient-to-b from-[#16161c] to-[#0a0a0d] border border-white/10 p-5 rounded-3xl shadow-[0_15px_30px_rgba(0,0,0,0.6)] space-y-4">
-            <div className="flex items-center justify-between border-b border-white/5 pb-3">
-              <div className="flex items-center gap-2">
-                <div className="bg-[#FF2348]/10 p-1.5 rounded-lg border border-[#FF2348]/30 text-[#FF2348] shadow-sm">
-                  <History className="w-4 h-4" />
-                </div>
-                <span className="text-xs font-black uppercase tracking-wider text-white">Affiliate Ledger Passbook</span>
-              </div>
-              <span className="text-[8px] text-zinc-500 font-mono font-black tracking-widest bg-black/40 px-2 py-0.5 rounded-md border border-white/5">REALTIME LEDGER</span>
-            </div>
-
-            <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 no-scrollbar">
-              {ledger.map(entry => (
-                <div key={entry.id} className="bg-gradient-to-r from-[#121215] to-[#08080a] hover:from-[#181820] hover:to-[#0f0f12] p-3 rounded-xl border border-white/5 flex items-center justify-between transition-all duration-150 shadow-md">
-                  <div className="flex items-center gap-3">
-                    {entry.type.startsWith('payout') ? (
-                      <div className="p-1.5 bg-[#FF2348]/15 rounded-lg border border-[#FF2348]/30 text-[#FF2348] shadow-sm">
-                        <ArrowDownLeft className="w-3.5 h-3.5" />
-                      </div>
-                    ) : (
-                      <div className="p-1.5 bg-emerald-500/15 rounded-lg border border-emerald-500/30 text-emerald-400 shadow-sm">
-                        <ArrowUpRight className="w-3.5 h-3.5" />
-                      </div>
-                    )}
-                    <div>
-                      <span className="text-[10px] font-black text-white block tracking-wide">
-                        {entry.type === 'referral_signup' && `Affiliate Registered (${entry.user})`}
-                        {entry.type === 'commission_bet' && `Bet commission: ${entry.game}`}
-                        {entry.type === 'payout_bank' && `Direct Bank cashout payout`}
-                        {entry.type === 'payout_wallet' && `Vault to Gaming Wallet credit`}
-                      </span>
-                      <span className="text-[8px] text-zinc-500 font-mono block mt-1 tracking-wider uppercase">{entry.timestamp}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="text-right flex flex-col items-end gap-1">
-                    <span className={`text-[11px] font-mono font-black tracking-tight block ${
-                      entry.type.startsWith('payout') ? 'text-zinc-400' : 'text-emerald-400'
-                    }`}>
-                      {entry.type.startsWith('payout') ? '−' : '+'}{formatCurrency(entry.amount)}
-                    </span>
-                    <span className={`text-[7px] font-mono font-black uppercase tracking-wider inline-block px-1.5 py-0.5 rounded-md shadow-sm ${
-                      entry.status === 'SUCCESS' ? 'bg-emerald-950/85 text-emerald-400 border border-emerald-500/30' : 'bg-amber-950/85 text-amber-400 border border-amber-500/30'
-                    }`}>
-                      {entry.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-        </div>
-      ) : (
-        // ==========================================
-        //  INVITE & SHARE VIEW
-        // ==========================================
-        <div className="space-y-4">
-          
-          {/* Header Banner - Super Simple & Welcoming */}
-          <div className="bg-[#111111] border border-white/5 p-5 rounded-2xl relative overflow-hidden shadow-lg space-y-2">
-            <div className="absolute right-[-10px] top-[-10px] w-24 h-24 bg-[#FF2348]/10 rounded-full blur-2xl pointer-events-none" />
-            <span className="bg-[#FF2348]/10 border border-[#FF2348]/30 text-[#FF2348] text-[9px] font-black tracking-wider px-2.5 py-0.5 rounded-full uppercase inline-block">
-              Invite & Earn Real cash
-            </span>
-            <h1 className="font-sans font-black text-xl tracking-tight text-white leading-tight">
-              Share your link, secure profits!
-            </h1>
-            <p className="text-zinc-400 text-[11px] leading-relaxed">
-              Earn lifetime commission bonuses on every single wager placed by users you refer. Profits accumulate inside your banking vault immediately.
-            </p>
-          </div>
-
-          {/* Sharing options */}
-          <div className="bg-[#111111] border border-white/5 p-5 rounded-2xl space-y-4 shadow-lg">
-            <div>
-              <span className="text-[10px] text-[#FF2348] font-black uppercase tracking-wider block mb-1.5">
-                YOUR UNIQUE REFERRAL LINK
-              </span>
-              <div className="flex items-center justify-between gap-2 bg-black/60 rounded-xl px-3.5 py-3 border border-white/5">
-                <span className="font-mono text-xs text-zinc-300 truncate select-all flex-1 pr-2">
-                  {referralLink}
-                </span>
-                <button
-                  onClick={copyLinkToClipboard}
-                  className={`px-3 py-1.8 rounded-lg font-sans font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 cursor-pointer transition-all ${
-                    copiedLink 
-                      ? 'bg-[#FF2348] text-white shadow-[0_0_10px_rgba(255,35,72,0.4)]' 
-                      : 'bg-white/10 text-white hover:bg-white/15'
-                  }`}
-                >
-                  {copiedLink ? (
-                    <>
-                      <Check className="w-3.5 h-3.5" />
-                      <span>COPIED!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>COPY LINK</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Big Social Buttons */}
-            <div className="space-y-2">
-              <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">
-                Instantly broadcast to your social circles:
-              </span>
-              
-              <div className="grid grid-cols-2 gap-2.5">
-                {/* WhatsApp Big Button */}
-                <button
-                  onClick={shareWhatsApp}
-                  className="py-3 px-4 bg-[#25D366] hover:bg-[#20ba59] active:scale-98 transition-all rounded-xl font-sans font-black text-xs text-white flex items-center justify-center gap-2 cursor-pointer shadow-lg"
-                >
-                  <Share2 className="w-4 h-4 shrink-0" />
-                  <span>Share on WhatsApp</span>
-                </button>
-
-                {/* Telegram Big Button */}
-                <button
-                  onClick={shareTelegram}
-                  className="py-3 px-4 bg-[#0088cc] hover:bg-[#0077b3] active:scale-98 transition-all rounded-xl font-sans font-black text-xs text-white flex items-center justify-center gap-2 cursor-pointer shadow-lg"
-                >
-                  <Send className="w-4 h-4 shrink-0" />
-                  <span>Share on Telegram</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* How it works simple steps */}
-          <div className="bg-black/25 border border-white/5 p-5 rounded-2xl space-y-3">
-            <span className="text-[10px] text-zinc-400 font-black uppercase tracking-wider block">
-              Direct Referral Pipeline (3 Simple Steps):
-            </span>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <span className="w-5 h-5 rounded-full bg-[#FF2348]/10 border border-[#FF2348]/20 text-[#FF2348] text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">
-                  1
-                </span>
-                <p className="text-xs text-zinc-300 leading-relaxed">
-                  <strong className="text-white">Copy & Share:</strong> Copy your invitation url or dispatch it directly on WhatsApp/Telegram.
-                </p>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="w-5 h-5 rounded-full bg-[#FF2348]/10 border border-[#FF2348]/20 text-[#FF2348] text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">
-                  2
-                </span>
-                <p className="text-xs text-zinc-300 leading-relaxed">
-                  <strong className="text-white">Registration & Play:</strong> Friends use your referral link to sign up on Tenzo 247.
-                </p>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="w-5 h-5 rounded-full bg-[#FF2348]/10 border border-[#FF2348]/20 text-[#FF2348] text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">
-                  3
-                </span>
-                <p className="text-xs text-zinc-300 leading-relaxed">
-                  <strong className="text-white">Lifetime Commission payouts:</strong> Gain real money commissions every time they wager. Withdraw funds to your linked bank account with absolute freedom.
-                </p>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      )}
-
-      {/* Simulation / Testing button */}
-      <div className="pt-2 flex items-center justify-center">
+      {/* Quick Share Buttons */}
+      <div className="pt-2 grid grid-cols-2 gap-3.5 w-full">
+        {/* Share on WhatsApp */}
         <button
-          onClick={triggerSimulatedSignup}
-          className="w-full text-center py-3.5 px-4 rounded-xl border border-dashed border-[#FF2348]/20 bg-[#FF2348]/5 text-zinc-400 hover:text-white hover:border-[#FF2348]/40 hover:bg-[#FF2348]/10 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 font-sans font-black text-xs uppercase"
+          onClick={shareWhatsApp}
+          className="py-3.5 px-4 bg-[#25D366] hover:bg-[#20ba59] active:scale-95 transition-all rounded-xl font-sans font-black text-xs text-white flex items-center justify-center gap-2 cursor-pointer shadow-lg uppercase tracking-wider"
         >
-          <Sparkles className="w-4 h-4 text-[#FF2348] animate-pulse" />
-          <span>Simulate 1 New Affiliate Sign-Up (+Cash)</span>
+          <Share2 className="w-4 h-4 shrink-0" />
+          <span>WhatsApp</span>
+        </button>
+
+        {/* Share on Telegram */}
+        <button
+          onClick={shareTelegram}
+          className="py-3.5 px-4 bg-[#0088cc] hover:bg-[#0077b3] active:scale-95 transition-all rounded-xl font-sans font-black text-xs text-white flex items-center justify-center gap-2 cursor-pointer shadow-lg uppercase tracking-wider"
+        >
+          <Send className="w-4 h-4 shrink-0" />
+          <span>Telegram</span>
         </button>
       </div>
 

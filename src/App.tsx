@@ -1027,52 +1027,89 @@ export default function App() {
               )}
               {/* White + Neon Crimson branding */}
               <div className="flex flex-col justify-center">
-                <span className="font-sans font-black italic text-[18px] tracking-wider text-white leading-none">TENZO</span>
-                <span className="font-sans font-black italic text-[13px] tracking-widest text-[#FF2348] uppercase leading-none mt-0.5">247</span>
+                <span className="font-sans font-black italic text-[14px] tracking-wider text-white leading-none">TENZO</span>
+                <span className="font-sans font-black italic text-[10px] tracking-widest text-[#FF2348] uppercase leading-none mt-0.5">247</span>
               </div>
             </div>
 
             {/* Right: Wallet/Login/Logout Section */}
-            <div className="flex items-center gap-3 shrink-0 select-none">
+            <div className="flex items-center gap-2 shrink-0 select-none">
               {isLoggedIn ? (
-                <>
-                  {/* Center: Premium Wallet Balance Capsule Card */}
-                  <div className="relative flex items-center bg-[#161616]/90 border border-[#FF2348]/25 rounded-full pl-3 pr-1 py-1 gap-2 sm:gap-2.5 shadow-[0_0_15px_rgba(255,35,72,0.1)] h-[38px] select-none shrink-0">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <Wallet className="w-3.5 h-3.5 text-[#FF2348] shrink-0 filter drop-shadow-[0_0_3px_rgba(255,35,72,0.5)]" />
-                      
-                      <div className="relative flex items-center min-w-0">
-                        {user.isBalanceLoading ? (
-                          <div className="flex items-center gap-1.5 py-0.5">
-                            <span className="relative flex h-1.5 w-1.5">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+                activeTab === 'bank' ? (
+                  <>
+                    {/* Premium Wallet Balance Card (Shifted to the rightmost slot) */}
+                    <motion.div
+                      layoutId="wallet-balance-card"
+                      className="relative flex items-center justify-between bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] border border-white/10 border-t-[#FF2348] rounded-lg px-2.5 shadow-[0_4px_12px_rgba(0,0,0,0.5),_inset_0_1px_0_rgba(255,255,255,0.1)] h-[32px] w-[115px] select-none shrink-0 gap-1 overflow-hidden"
+                    >
+                      {/* Subtle red linear accent lighting from the side */}
+                      <div className="absolute top-0 right-0 w-8 h-full bg-gradient-to-l from-[#FF2348]/10 to-transparent pointer-events-none" />
+                      <Wallet className="w-3.5 h-3.5 text-[#FF2348] shrink-0 filter drop-shadow-[0_0_4px_rgba(255,35,72,0.6)]" />
+                      <div className="relative flex flex-col items-end justify-center min-w-0 flex-1 leading-none">
+                        <span className="text-[7px] font-mono uppercase tracking-widest text-zinc-500 font-black block leading-none mb-0.5">BALANCE</span>
+                        <div className="relative flex items-center min-w-0 leading-none">
+                          {user.isBalanceLoading ? (
+                            <div className="flex items-center gap-1">
+                              <span className="relative flex h-1.5 w-1.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+                              </span>
+                              <span className="font-sans font-bold text-[7px] uppercase tracking-wider text-zinc-400 leading-none">...</span>
+                            </div>
+                          ) : (
+                            <span className="font-sans font-black text-[11px] tracking-wide inline-block text-white leading-none whitespace-nowrap">
+                              {formatBalance(user.walletBalance)}
                             </span>
-                            <span className="font-sans font-bold text-[10px] uppercase tracking-wider text-zinc-400 leading-none">Loading...</span>
-                          </div>
-                        ) : (
-                          <span className="font-sans font-extrabold text-[12px] tracking-wider inline-block text-white leading-none whitespace-nowrap">
-                            {formatBalance(user.walletBalance)}
-                          </span>
-                        )}
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    </motion.div>
+                  </>
+                ) : (
+                  <>
+                    {/* Premium Wallet Balance Card */}
+                    <motion.div
+                      layoutId="wallet-balance-card"
+                      className="relative flex items-center justify-between bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] border border-white/10 border-t-[#FF2348] rounded-lg px-2.5 shadow-[0_4px_12px_rgba(0,0,0,0.5),_inset_0_1px_0_rgba(255,255,255,0.1)] h-[32px] w-[115px] select-none shrink-0 gap-1 overflow-hidden"
+                    >
+                      {/* Subtle red linear accent lighting from the side */}
+                      <div className="absolute top-0 right-0 w-8 h-full bg-gradient-to-l from-[#FF2348]/10 to-transparent pointer-events-none" />
+                      <Wallet className="w-3.5 h-3.5 text-[#FF2348] shrink-0 filter drop-shadow-[0_0_4px_rgba(255,35,72,0.6)]" />
+                      <div className="relative flex flex-col items-end justify-center min-w-0 flex-1 leading-none">
+                        <span className="text-[7px] font-mono uppercase tracking-widest text-zinc-500 font-black block leading-none mb-0.5">BALANCE</span>
+                        <div className="relative flex items-center min-w-0 leading-none">
+                          {user.isBalanceLoading ? (
+                            <div className="flex items-center gap-1">
+                              <span className="relative flex h-1.5 w-1.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+                              </span>
+                              <span className="font-sans font-bold text-[7px] uppercase tracking-wider text-zinc-400 leading-none">...</span>
+                            </div>
+                          ) : (
+                            <span className="font-sans font-black text-[11px] tracking-wide inline-block text-white leading-none whitespace-nowrap">
+                              {formatBalance(user.walletBalance)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
 
-                    {/* Add Money button - glossy red finish */}
+                    {/* Theme Red Deposit Button with slightly curved rectangular edges */}
                     <motion.button
+                      layoutId="deposit-btn"
                       onClick={() => {
                         playClick();
                         setBankPresetTab('deposit');
                         setActiveTab('bank');
                       }}
                       whileTap={{ scale: 0.95 }}
-                      className="relative overflow-hidden bg-gradient-to-r from-[#FF2348] to-[#B4002C] text-white text-[10px] font-sans font-black italic px-3 py-1 rounded-full border-none shadow-[0_0_15px_rgba(255,35,72,0.65),_0_0_4px_#FF2348] hover:shadow-[0_0_25px_rgba(255,35,72,0.85),_0_0_8px_#FF2348] transition-all duration-300 cursor-pointer flex items-center justify-center gap-1 shrink-0 h-[28px]"
+                      className="relative overflow-hidden bg-gradient-to-r from-[#FF2348] to-[#B4002C] hover:from-[#ff3d5e] hover:to-[#cb0032] text-white text-[10px] font-sans font-black rounded-lg border border-[#FF2348]/20 shadow-[0_2px_8px_rgba(255,35,72,0.3)] hover:shadow-[0_4px_12px_rgba(255,35,72,0.5)] transition-all duration-300 cursor-pointer flex items-center justify-center shrink-0 h-[32px] w-[115px]"
                     >
-                      <Plus className="w-2.5 h-2.5 stroke-[3] text-white shrink-0" />
-                      <span className="tracking-wide uppercase">ADD</span>
+                      <span className="tracking-widest uppercase text-[9px] font-black">DEPOSIT</span>
                     </motion.button>
-                  </div>
-                </>
+                  </>
+                )
               ) : !showLoginModal && (
                 /* Glowing premium Login button when logged out */
                 <motion.button
@@ -1081,9 +1118,9 @@ export default function App() {
                     setShowLoginModal(true);
                   }}
                   whileTap={{ scale: 0.95 }}
-                  className="relative overflow-hidden bg-gradient-to-r from-[#FF2348] to-[#B4002C] text-white text-[11px] font-sans font-black italic px-5 py-1.5 rounded-full border-none shadow-[0_0_15px_rgba(255,35,72,0.65),_0_0_4px_#FF2348] hover:shadow-[0_0_25px_rgba(255,35,72,0.9),_0_0_8px_#FF2348] transition-all duration-300 cursor-pointer flex items-center justify-center shrink-0 h-[34px]"
+                  className="relative overflow-hidden bg-gradient-to-r from-[#FF2348] to-[#B4002C] text-white text-[10px] font-sans font-black px-5 rounded-lg border border-[#FF2348]/20 shadow-[0_2px_8px_rgba(255,35,72,0.3)] hover:shadow-[0_4px_12px_rgba(255,35,72,0.5)] transition-all duration-300 cursor-pointer flex items-center justify-center shrink-0 h-[32px] w-[115px]"
                 >
-                  <span className="tracking-wide uppercase">LOGIN</span>
+                  <span className="tracking-widest uppercase text-[9px] font-black">LOGIN</span>
                 </motion.button>
               )}
             </div>
@@ -1786,7 +1823,7 @@ export default function App() {
                     playClick();
                     setShowLoginModal(false);
                   }}
-                  className="group fixed top-4 right-4 z-[10001] flex items-center gap-2 px-4 py-2 rounded-full font-sans text-[10.5px] font-black tracking-[0.15em] uppercase text-zinc-300 hover:text-white bg-black/85 hover:bg-neutral-950/90 border border-neutral-800/80 hover:border-[#FF2348]/60 shadow-[0_4px_24px_rgba(0,0,0,0.85)] hover:shadow-[0_0_20px_rgba(255,35,72,0.25)] transition-all duration-300 cursor-pointer select-none transform hover:scale-[1.04] active:scale-[0.96]"
+                  className="group fixed top-4 right-4 z-[10001] flex items-center gap-2 px-4 py-2 rounded-lg font-sans text-[10.5px] font-black tracking-[0.15em] uppercase text-zinc-300 hover:text-white bg-black/85 hover:bg-neutral-950/90 border border-neutral-800/80 hover:border-[#FF2348]/60 shadow-[0_4px_24px_rgba(0,0,0,0.85)] hover:shadow-[0_0_20px_rgba(255,35,72,0.25)] transition-all duration-300 cursor-pointer select-none transform hover:scale-[1.04] active:scale-[0.96]"
                 >
                   <X className="w-3.5 h-3.5 text-[#FF2348]" />
                   <span>CLOSE</span>

@@ -1,7 +1,7 @@
 import { useState, useEffect, ChangeEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Game, UserProfile, Transaction } from '../types';
-import { Play, Heart, Flame, ShieldCheck, HelpCircle, Trophy, Users, Zap, ExternalLink, Activity, Lock, ArrowDownCircle, ArrowUpCircle, Wallet, Check, Clock, TrendingUp, Sparkles, Gift, Camera, Headphones } from 'lucide-react';
+import { Play, Heart, Flame, ShieldCheck, HelpCircle, Trophy, Users, Zap, ExternalLink, Activity, Lock, ArrowDownCircle, ArrowUpCircle, Wallet, Check, Clock, TrendingUp, Sparkles, Gift, Camera, Headphones, ChevronLeft, ChevronRight, Coins } from 'lucide-react';
 import { playClick, playHover, playWin } from '../utils/audio';
 
 interface LobbyTabProps {
@@ -47,33 +47,116 @@ export default function LobbyTab({
   const [currentHeroIdx, setCurrentHeroIdx] = useState(0);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
-  useEffect(() => {
-    if (activeHeroes.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentHeroIdx((prev) => (prev + 1) % activeHeroes.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [activeHeroes.length]);
+  const defaultSlides = [
+    {
+      id: 'welcome',
+      badge: 'PROMOTION',
+      badgeColor: 'bg-amber-500/10 border-amber-500/20 text-amber-500',
+      title: '200% WELCOME BONUS',
+      subtitle: 'CLAIM YOUR EXTRA CASH BOOST ON FIRST DEPOSIT',
+      highlight: 'UP TO ₹50,000 BONUS PLAYABLE ON ALL GAMES',
+      ctaText: 'DEPOSIT NOW',
+      ctaAction: () => onNavigateBank?.('deposit'),
+      gradient: 'from-[#1a1300] via-[#080500] to-black',
+      accentColor: 'text-[#F7C900]',
+      buttonColor: 'bg-gradient-to-r from-[#FFE57F] via-[#FFD54F] to-[#FFC107] text-black shadow-[0_4px_14px_rgba(255,193,7,0.35)] hover:from-[#FFE082] hover:to-[#FFB300]',
+      imageUrl: '',
+      bgGraphic: (
+        <div className="absolute right-0 bottom-0 top-0 w-[45%] bg-gradient-to-l from-[#FFD54F]/10 to-transparent flex items-center justify-center pointer-events-none overflow-hidden">
+          <div className="w-[150%] h-[150%] bg-[#FFD54F]/5 rounded-full blur-[80px] animate-pulse" />
+          <Coins className="w-40 h-40 text-[#FFD54F]/10 rotate-12 stroke-[1] shrink-0 translate-x-12" />
+        </div>
+      )
+    },
+    {
+      id: 'aviator',
+      badge: 'HOT GAME',
+      badgeColor: 'bg-red-500/10 border-red-500/20 text-red-500',
+      title: 'CHASE THE MULTIPLIER',
+      subtitle: 'AVIATOR JET TAKE-OFF IS LIVE NOW',
+      highlight: 'FLY HIGH AND CASH OUT BEFORE THE CRASH TO WIN 100x+',
+      ctaText: 'PLAY AVIATOR',
+      ctaAction: () => {
+        const aviatorGame = games.find(g => g.id === 'aviator') || games[0];
+        if (aviatorGame) onSelectGame(aviatorGame);
+      },
+      gradient: 'from-[#1a0004] via-[#050001] to-black',
+      accentColor: 'text-[#FF2348]',
+      buttonColor: 'bg-gradient-to-r from-[#FF2348] to-[#B4002C] text-white shadow-[0_4px_14px_rgba(255,35,72,0.35)] hover:from-[#ff3d5e] hover:to-[#cb0032]',
+      imageUrl: '',
+      bgGraphic: (
+        <div className="absolute right-0 bottom-0 top-0 w-[45%] bg-gradient-to-l from-[#FF2348]/10 to-transparent flex items-center justify-center pointer-events-none overflow-hidden">
+          <div className="w-[150%] h-[150%] bg-[#FF2348]/5 rounded-full blur-[80px]" />
+          <span className="text-[120px] text-[#FF2348]/10 select-none transform rotate-12 shrink-0 translate-x-8 italic font-black font-sans leading-none">✈</span>
+        </div>
+      )
+    },
+    {
+      id: 'sports',
+      badge: 'SPORTSBOOK',
+      badgeColor: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500',
+      title: 'PREMIUM SPORTS BETTING',
+      subtitle: 'BEST ODDS ON CRICKET, SOCCER & TENNIS',
+      highlight: 'PLACE FLASH BETS AND INSTANT PREDICTIONS LIVE',
+      ctaText: 'BET ON SPORTS',
+      ctaAction: () => onEnterSportsbook?.(),
+      gradient: 'from-[#001a0d] via-[#000502] to-black',
+      accentColor: 'text-[#10B981]',
+      buttonColor: 'bg-gradient-to-r from-emerald-400 to-emerald-600 text-black font-bold shadow-[0_4px_14px_rgba(16,185,129,0.35)] hover:from-emerald-500 hover:to-emerald-700',
+      imageUrl: '',
+      bgGraphic: (
+        <div className="absolute right-0 bottom-0 top-0 w-[45%] bg-gradient-to-l from-emerald-500/10 to-transparent flex items-center justify-center pointer-events-none overflow-hidden">
+          <div className="w-[150%] h-[150%] bg-emerald-500/5 rounded-full blur-[80px]" />
+          <TrendingUp className="w-36 h-36 text-emerald-500/10 -rotate-12 stroke-[1] shrink-0 translate-x-12" />
+        </div>
+      )
+    }
+  ];
 
-  const currentHero = activeHeroes[currentHeroIdx % activeHeroes.length];
-  const heroImage = currentHero ? currentHero.image_url : (globalSettings?.hero_poster_url || '');
+  const slidesToUse = activeHeroes.length > 0
+    ? activeHeroes.map((hero: any, index: number) => ({
+        id: hero.id || `custom-${index}`,
+        badge: hero.badge_text || 'PROMOTION',
+        badgeColor: 'bg-[#FF2348]/10 border-[#FF2348]/20 text-[#FF2348]',
+        title: hero.heading || globalSettings?.hero_heading || 'PREMIUM PROMOTION',
+        subtitle: hero.subheading || globalSettings?.hero_subheading || 'JOIN THE ACTION TODAY',
+        highlight: hero.highlight_text || '',
+        ctaText: hero.cta_type === 'deposit' ? 'DEPOSIT NOW' : 'PLAY NOW',
+        ctaAction: () => {
+          const ctaType = hero.cta_type || 'deposit';
+          if (ctaType === 'deposit') {
+            onNavigateBank?.('deposit');
+          } else {
+            let targetId = 'aviator';
+            if (ctaType === 'chicken') targetId = 'crossfire-chicken';
+            if (ctaType === 'wheel') targetId = 'neon-wheel';
+            const targetGame = games.find(g => g.id === targetId) || games[0];
+            if (targetGame) onSelectGame(targetGame);
+          }
+        },
+        imageUrl: hero.image_url,
+        gradient: 'from-[#111] via-black to-[#111]',
+        accentColor: 'text-[#FF2348]',
+        buttonColor: 'bg-gradient-to-r from-[#FF2348] to-[#B4002C] text-white shadow-[0_4px_14px_rgba(255,35,72,0.35)]',
+        bgGraphic: null
+      }))
+    : defaultSlides;
+
+  useEffect(() => {
+    if (slidesToUse.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentHeroIdx((prev) => (prev + 1) % slidesToUse.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [slidesToUse.length]);
+
+  const activeSlide = slidesToUse[currentHeroIdx % slidesToUse.length];
+  const heroImage = activeSlide?.imageUrl || '';
 
   const handleHeroClick = () => {
     playClick();
-    const ctaType = currentHero?.cta_type || globalSettings?.hero_cta_type || 'deposit';
-    if (ctaType === 'deposit') {
-      if (onNavigateBank) {
-        onNavigateBank('deposit');
-      }
-    } else {
-      let targetId = 'aviator';
-      if (ctaType === 'chicken') targetId = 'crossfire-chicken';
-      if (ctaType === 'wheel') targetId = 'neon-wheel';
-      
-      const targetGame = games.find(g => g.id === targetId) || games.find(g => g.id === 'aviator') || games[0];
-      if (targetGame) {
-        onSelectGame(targetGame);
-      }
+    if (activeSlide?.ctaAction) {
+      activeSlide.ctaAction();
     }
   };
 
@@ -219,10 +302,127 @@ export default function LobbyTab({
   };
 
   return (
-    <div className="space-y-4 select-none relative pb-10 pt-1">
+    <div className="space-y-4 select-none relative pb-10 pt-0">
 
-      {/* 1. HERO BANNER (Kept completely blank per user request) */}
-      {null}
+      {/* Wrapping Ticker and Hero together with a tighter gap to reduce spacing */}
+      <div className="flex flex-col gap-2">
+        {/* LIVE MEGA WINS TICKER (Social Proof) - Placed between Header and Hero */}
+        <div className="relative w-full overflow-hidden bg-[#111111]/35 border border-white/5 rounded-lg py-1 px-2.5 flex items-center gap-2 select-none h-7">
+          {/* Blinking Live Label */}
+          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#FF2348]/10 border border-[#FF2348]/20 shrink-0 z-10">
+            <span className="relative flex h-1 w-1">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF2348] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1 w-1 bg-[#FF2348]"></span>
+            </span>
+            <span className="text-[7.5px] font-sans font-black uppercase tracking-wider text-[#FFFF]/95 whitespace-nowrap">
+              LIVE WINS
+            </span>
+          </div>
+
+          {/* Scroll Area */}
+          <div className="relative flex-1 overflow-hidden h-4 flex items-center">
+            {/* High-end Edge Fade Gradients */}
+            <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-[#111111]/80 to-transparent pointer-events-none z-10" />
+            <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-[#111111]/80 to-transparent pointer-events-none z-10" />
+
+            <div 
+              className="animate-marquee flex items-center gap-8 text-[9.5px] font-mono font-medium text-stone-300 uppercase tracking-wide"
+              style={{ animationDuration: '24s' }}
+            >
+              {[
+                { user: "deb***", game: "Aviator", multiplier: "84.5x", win: 42250 },
+                { user: "sam***", game: "Neon Wheel", multiplier: "120.0x", win: 120000 },
+                { user: "vik***", game: "Chicken Road", multiplier: "42.1x", win: 84200 },
+                { user: "rah***", game: "Dragon Tiger", multiplier: "15.0x", win: 45000 },
+                { user: "pri***", game: "Gates of Olympus", multiplier: "250.0x", win: 250000 },
+                { user: "ans***", game: "Mines", multiplier: "75.0x", win: 75000 },
+                { user: "gur***", game: "Aviator", multiplier: "148.2x", win: 148200 }
+              ].concat([
+                { user: "deb***", game: "Aviator", multiplier: "84.5x", win: 42250 },
+                { user: "sam***", game: "Neon Wheel", multiplier: "120.0x", win: 120000 },
+                { user: "vik***", game: "Chicken Road", multiplier: "42.1x", win: 84200 },
+                { user: "rah***", game: "Dragon Tiger", multiplier: "15.0x", win: 45000 },
+                { user: "pri***", game: "Gates of Olympus", multiplier: "250.0x", win: 250000 },
+                { user: "ans***", game: "Mines", multiplier: "75.0x", win: 75000 },
+                { user: "gur***", game: "Aviator", multiplier: "148.2x", win: 148200 }
+              ], [
+                { user: "deb***", game: "Aviator", multiplier: "84.5x", win: 42250 },
+                { user: "sam***", game: "Neon Wheel", multiplier: "120.0x", win: 120000 },
+                { user: "vik***", game: "Chicken Road", multiplier: "42.1x", win: 84200 },
+                { user: "rah***", game: "Dragon Tiger", multiplier: "15.0x", win: 45000 },
+                { user: "pri***", game: "Gates of Olympus", multiplier: "250.0x", win: 250000 },
+                { user: "ans***", game: "Mines", multiplier: "75.0x", win: 75000 },
+                { user: "gur***", game: "Aviator", multiplier: "148.2x", win: 148200 }
+              ]).map((item, itemIdx) => (
+                <div key={itemIdx} className="flex items-center gap-1.5 whitespace-nowrap shrink-0">
+                  <span className="text-stone-500 font-sans font-bold text-[9px]">{item.user}</span>
+                  <span className="text-[#FF2348] font-sans font-black tracking-tight">₹{formatBalance(item.win)}</span>
+                  <span className="text-stone-400 text-[9px]">on</span>
+                  <span className="text-white font-sans font-extrabold text-[9px]">{item.game}</span>
+                  <span className="px-1 py-0.5 text-[7.5px] font-sans font-black bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 rounded leading-none">
+                    {item.multiplier}
+                  </span>
+                  <span className="text-stone-700 font-bold">•</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 1. HERO BANNER (Edge-to-Edge Full Size, Text-free for neat visual-only backdrop) */}
+        <div className="relative mx-[-16px] w-[calc(100%+32px)] sm:mx-0 sm:w-full overflow-hidden sm:rounded-2xl border-y sm:border border-white/5 bg-[#0a0a0a] shadow-2xl select-none group min-h-[160px] sm:min-h-[200px] md:min-h-[220px] flex items-center cursor-pointer" onClick={handleHeroClick}>
+        
+        {/* Carousel Slide Wrapper */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeSlide.id}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className={`absolute inset-0 w-full h-full bg-gradient-to-r ${activeSlide.gradient} flex items-center`}
+          >
+            {/* Custom Background Image if activeSlide.imageUrl exists */}
+            {activeSlide.imageUrl && (
+              <div 
+                className="absolute inset-0 w-full h-full bg-cover bg-center opacity-40 mix-blend-overlay"
+                style={{ backgroundImage: `url(${activeSlide.imageUrl})` }}
+              />
+            )}
+
+            {/* Accent Graphic Elements */}
+            {activeSlide.bgGraphic}
+
+            {/* Glowing Corner Vignette */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40 pointer-events-none" />
+            <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-black to-transparent pointer-events-none" />
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Desktop Arrow Navigation */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            playClick();
+            setCurrentHeroIdx((prev) => (prev - 1 + slidesToUse.length) % slidesToUse.length);
+          }}
+          className="absolute left-4 z-20 w-8 h-8 rounded-lg bg-black/60 hover:bg-black/95 text-white/75 hover:text-white border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:flex cursor-pointer active:scale-95"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            playClick();
+            setCurrentHeroIdx((prev) => (prev + 1) % slidesToUse.length);
+          }}
+          className="absolute right-4 z-20 w-8 h-8 rounded-lg bg-black/60 hover:bg-black/95 text-white/75 hover:text-white border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:flex cursor-pointer active:scale-95"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
+
+      </div>
+</div>
 
       {/* 2. DYNAMIC SEGMENTED VIEWS: CASINO VS SPORTS */}
       <section className="space-y-4 pb-2">
@@ -696,70 +896,6 @@ export default function LobbyTab({
           </div>
         )}
       </section>
-
-      {/* LIVE MEGA WINS TICKER (Social Proof) */}
-      <div className="relative w-full overflow-hidden bg-[#111111]/35 border border-white/5 rounded-xl py-2 px-3 flex items-center gap-3 select-none">
-        {/* Blinking Live Label */}
-        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#FF2348]/10 border border-[#FF2348]/20 shrink-0 z-10">
-          <span className="relative flex h-1.5 w-1.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF2348] opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#FF2348]"></span>
-          </span>
-          <span className="text-[9px] font-sans font-black uppercase tracking-wider text-[#FF2348] whitespace-nowrap">
-            MEGA WINS
-          </span>
-        </div>
-
-        {/* Scroll Area */}
-        <div className="relative flex-1 overflow-hidden h-5 flex items-center">
-          {/* High-end Edge Fade Gradients */}
-          <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-[#111111] to-transparent pointer-events-none z-10" />
-          <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-[#111111] to-transparent pointer-events-none z-10" />
-
-          <div 
-            className="animate-marquee flex items-center gap-8 text-[10px] font-mono font-medium text-stone-300 uppercase tracking-wide"
-            style={{ animationDuration: '24s' }}
-          >
-            {[
-              { user: "deb***", game: "Aviator", multiplier: "84.5x", win: 42250 },
-              { user: "sam***", game: "Neon Wheel", multiplier: "120.0x", win: 120000 },
-              { user: "vik***", game: "Chicken Road", multiplier: "42.1x", win: 84200 },
-              { user: "rah***", game: "Dragon Tiger", multiplier: "15.0x", win: 45000 },
-              { user: "pri***", game: "Gates of Olympus", multiplier: "250.0x", win: 250000 },
-              { user: "ans***", game: "Mines", multiplier: "75.0x", win: 75000 },
-              { user: "gur***", game: "Aviator", multiplier: "148.2x", win: 148200 }
-            ].concat([
-              { user: "deb***", game: "Aviator", multiplier: "84.5x", win: 42250 },
-              { user: "sam***", game: "Neon Wheel", multiplier: "120.0x", win: 120000 },
-              { user: "vik***", game: "Chicken Road", multiplier: "42.1x", win: 84200 },
-              { user: "rah***", game: "Dragon Tiger", multiplier: "15.0x", win: 45000 },
-              { user: "pri***", game: "Gates of Olympus", multiplier: "250.0x", win: 250000 },
-              { user: "ans***", game: "Mines", multiplier: "75.0x", win: 75000 },
-              { user: "gur***", game: "Aviator", multiplier: "148.2x", win: 148200 }
-            ], [
-              { user: "deb***", game: "Aviator", multiplier: "84.5x", win: 42250 },
-              { user: "sam***", game: "Neon Wheel", multiplier: "120.0x", win: 120000 },
-              { user: "vik***", game: "Chicken Road", multiplier: "42.1x", win: 84200 },
-              { user: "rah***", game: "Dragon Tiger", multiplier: "15.0x", win: 45000 },
-              { user: "pri***", game: "Gates of Olympus", multiplier: "250.0x", win: 250000 },
-              { user: "ans***", game: "Mines", multiplier: "75.0x", win: 75000 },
-              { user: "gur***", game: "Aviator", multiplier: "148.2x", win: 148200 }
-            ]).map((item, itemIdx) => (
-              <div key={itemIdx} className="flex items-center gap-2 whitespace-nowrap shrink-0">
-                <span className="text-stone-500 font-sans font-bold">{item.user}</span>
-                <span className="text-stone-400">won</span>
-                <span className="text-[#FF2348] font-sans font-black tracking-tight">₹{formatBalance(item.win)}</span>
-                <span className="text-stone-400">on</span>
-                <span className="text-white font-sans font-extrabold">{item.game}</span>
-                <span className="px-1 py-0.5 text-[8px] font-sans font-black bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 rounded leading-none">
-                  {item.multiplier}
-                </span>
-                <span className="text-stone-700">•</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
     </div>
   );

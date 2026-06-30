@@ -12,6 +12,7 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   ArrowLeftRight,
+  ArrowLeft,
   History,
   PiggyBank,
   ChevronRight,
@@ -27,7 +28,8 @@ import {
   Check,
   MessageSquare,
   LogOut,
-  Share2
+  Share2,
+  Landmark
 } from 'lucide-react';
 import { playClick, playHover, playWin } from '../utils/audio';
 
@@ -41,6 +43,7 @@ interface AccountTabProps {
   onUpdateBankAccounts?: (accounts: any[]) => void;
   upiAccounts?: any[];
   onUpdateUpiAccounts?: (accounts: any[]) => void;
+  transactions?: Transaction[];
 }
 
 interface BankAccount {
@@ -64,6 +67,7 @@ export default function AccountTab({
   onAddTransaction, 
   onLogout,
   onNavigate,
+  transactions = [],
   ...props
 }: AccountTabProps) {
   const [claiming, setClaiming] = useState<boolean>(false);
@@ -71,6 +75,19 @@ export default function AccountTab({
   const [newUsername, setNewUsername] = useState<string>(user.username);
   const [showSaveFeedback, setShowSaveFeedback] = useState<boolean>(false);
   const [copiedText, setCopiedText] = useState<string>('');
+  const [isBankDetailsOpen, setIsBankDetailsOpen] = useState<boolean>(true);
+
+  // Count today's successful or pending withdrawals dynamically
+  const dailyWithdrawalsDone = (transactions || []).filter(tx => {
+    if (tx.type !== 'withdraw') return false;
+    if (tx.status !== 'SUCCESS' && tx.status !== 'PENDING') return false;
+    
+    const ts = tx.timestamp.toLowerCase();
+    if (ts.includes('yesterday')) return false;
+    if (ts.includes('jun') || ts.includes('jul') || ts.includes('may')) return false;
+    
+    return true;
+  }).length;
 
   // Local state for linked payment details (stored dynamically with premium defaults)
   const [localLinkedBanks, setLocalLinkedBanks] = useState<BankAccount[]>(() => {
@@ -146,7 +163,7 @@ export default function AccountTab({
   }, [linkedUpis, props.upiAccounts]);
 
   // Modal overlays state
-  const [activeOverlay, setActiveOverlay] = useState<null | 'add_bank' | 'add_upi' | 'transfer' | 'history' | 'kyc' | 'rewards' | 'support'>(null);
+  const [activeOverlay, setActiveOverlay] = useState<null | 'add_bank' | 'add_upi' | 'transfer' | 'history' | 'kyc' | 'rewards' | 'support' | 'bank_details'>(null);
 
   // Modal subforms
   const [newBankName, setNewBankName] = useState('');
@@ -378,7 +395,7 @@ export default function AccountTab({
   const initialLetter = user.username ? user.username.charAt(0).toUpperCase() : 'V';
 
   return (
-    <div className="relative font-sans text-white space-y-6 pb-20 select-none max-w-md mx-auto">
+    <div className="relative font-sans text-white space-y-6 pb-36 select-none max-w-md mx-auto">
       {/* Dynamic Keyframe style helper injection */}
       <style>{`
         @keyframes drift {
@@ -412,112 +429,45 @@ export default function AccountTab({
         ))}
       </div>
 
-      <div className="relative z-10 space-y-5 px-1">
+      <div className="relative z-10 space-y-5 px-1 pt-6">
+        {/* Spacer below the header (approx 10-15% of screen height) */}
+        <div className="h-[12vh] w-full pointer-events-none" id="header-spacer" />
         
-        {/* ==================== 2. PROFILE CARD ==================== */}
-        <div className="glass-panel p-5 rounded-[20px] border border-[#ff3b4d]/10 bg-black/60 relative overflow-hidden backdrop-blur-xl card-glow-red">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-[#ff3b4d]/5 rounded-full blur-2xl pointer-events-none" />
-          
-          <div className="flex items-center gap-4 relative z-10">
-            {/* Circular Avatar with Glowing Crimson Border */}
-            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#ff3b4d] to-[#160000] p-1 shadow-[0_0_15px_rgba(255,59,77,0.35)] relative shrink-0">
-              <div className="w-full h-full rounded-full bg-[#090909] flex items-center justify-center font-bold text-white text-2xl select-none">
-                {initialLetter}
-              </div>
-              <div className="absolute -bottom-1 -right-1 bg-[#ff3b4d] rounded-full p-1 border border-black shadow">
-                <BadgeCheck className="w-3.5 h-3.5 text-black" fill="#fff" />
-              </div>
-            </div>
-
-            <div className="flex-1 min-w-0 space-y-1">
-              <div className="flex items-center gap-2">
-                {isEditingName ? (
-                  <div className="flex items-center gap-1.5 w-full">
-                    <input
-                      type="text"
-                      value={newUsername}
-                      onChange={(e) => setNewUsername(e.target.value)}
-                      className="bg-[#090909] border border-[#ff3b4d]/30 rounded-lg px-2.5 py-1 text-xs text-white font-sans font-bold focus:outline-none focus:border-[#ff3b4d] w-full"
-                      maxLength={18}
-                      autoFocus
-                    />
-                    <button
-                      onClick={handleSaveUsername}
-                      className="p-1.5 bg-[#ff3b4d]/20 border border-[#ff3b4d]/40 text-[#ff3b4d] rounded-lg hover:bg-[#ff3b4d]/30"
-                      title="Save Name"
-                    >
-                      <Save className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1.5 max-w-full">
-                    <h3 className="font-sans font-black text-lg text-white tracking-wide truncate">
-                      {user.username}
-                    </h3>
-                    <button
-                      onClick={() => {
-                        playClick();
-                        setIsEditingName(true);
-                      }}
-                      className="text-[#ff3b4d]/60 hover:text-[#ff3b4d] transition-colors p-1"
-                      title="Edit Name"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Verified Badge / Notification */}
-              {showSaveFeedback && (
-                <div className="text-[10px] text-emerald-400 font-mono flex items-center gap-1 animate-pulse">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Profile details updated successfully!</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* ==================== 3. BALANCE CARD ==================== */}
-        <div className="glass-panel p-6 rounded-[20px] border border-[#ff3b4d]/15 bg-gradient-to-br from-[#160000] to-[#090909] relative overflow-hidden card-glow-red">
-          {/* Subtle Ambient Red Glow */}
-          <div className="absolute top-[-20%] right-[-10%] w-36 h-36 bg-[#ff3b4d]/15 rounded-full blur-3xl pointer-events-none" />
-          
-          <div className="flex items-center justify-between relative z-10 w-full">
-            <div className="space-y-2">
-              <span className="text-[10px] text-[#ff3b4d] font-black uppercase tracking-widest block">
-                Total Account Balance
+        {/* ==================== 5. WITHDRAW CARD ==================== */}
+        <div className="glass-panel p-5 rounded-[20px] border border-[#ff3b4d]/10 bg-black/60 relative overflow-hidden backdrop-blur-md shadow-xl">
+          <div className="flex items-center justify-between border-b border-white/5 pb-3">
+            <div>
+              <span className="text-[9px] text-[#ff3b4d] font-bold uppercase tracking-wider block">Withdrawable Balance</span>
+              <span className="font-sans font-extrabold text-xl text-white">
+                {user.isBalanceLoading ? 'Loading...' : formatCurrency(user.walletBalance)}
               </span>
-              <div className="flex flex-col">
-                <h1 className="font-sans font-black text-3xl text-white text-glow-crimson leading-tight">
-                  {user.isBalanceLoading ? 'Loading...' : formatCurrency(user.walletBalance)}
-                </h1>
-              </div>
             </div>
-
-            {/* Premium Digital Wallet CSS Illustration on Right */}
-            <div className="relative w-24 h-20 shrink-0 select-none flex items-center justify-center">
-              {/* Outer shining leather jacket representation */}
-              <div className="w-18 h-12 bg-gradient-to-br from-[#ff3b4d] to-[#160000] rounded-xl border border-white/10 shadow-[0_4px_15px_rgba(255,59,77,0.3)] relative transform rotate-[-6deg] flex items-center justify-end px-1.5">
-                {/* Steel leather rivet latch */}
-                <div className="w-5 h-3 bg-[#090909] rounded border border-white/15 shadow flex items-center justify-center">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#ff3b4d]" />
-                </div>
+            <div className="text-right flex flex-col items-end justify-center">
+              <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider block">Daily Withdrawals</span>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="font-sans font-black text-xs text-white">
+                  {dailyWithdrawalsDone} / 3
+                </span>
+                <span className="text-[9px] text-zinc-500 font-semibold uppercase">Done</span>
               </div>
-              {/* Gold/Red floating chips */}
-              <div className="absolute top-1 left-3 w-6 h-6 rounded-full bg-gradient-to-tr from-[#ff3b4d] to-[#ffb347] border border-[#090909] transform rotate-[12deg] shadow-lg flex items-center justify-center">
-                <span className="font-bold text-[8px] text-black">💰</span>
-              </div>
-              <div className="absolute top-2 right-4 w-5 h-5 rounded-full bg-[#ffd700] border border-[#090909] transform rotate-[-15deg] shadow-lg flex items-center justify-center text-[8px] text-black">
-                ★
-              </div>
+              <span className="font-sans font-extrabold text-[9px] text-[#ff3b4d] bg-[#ff3b4d]/10 border border-[#ff3b4d]/20 px-1.5 py-0.5 rounded-md mt-1.5 uppercase tracking-wider">
+                Max 3 / Day
+              </span>
             </div>
           </div>
+
+          <button
+            onClick={() => { if (onNavigate) onNavigate('bank', 'withdraw'); }}
+            onMouseEnter={() => playHover()}
+            className="w-full mt-3 py-3 rounded-xl bg-gradient-to-r from-[#ff3b4d] to-[#160000] hover:from-[#ff5565] border border-[#ff3b4d]/30 text-white font-extrabold text-xs uppercase tracking-widest transition-all hover:shadow-[0_0_15px_rgba(255,59,77,0.25)] flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+          >
+            <span>Withdraw Now</span>
+            <ArrowUpRight className="w-4 h-4 text-white animate-bounce-horizontal" />
+          </button>
         </div>
 
         {/* ==================== 4. QUICK ACTIONS ==================== */}
-        <div className="grid grid-cols-4 gap-2.5">
+        <div className="grid grid-cols-4 gap-2.5 pt-1">
           {[
             { 
               label: 'Deposit', 
@@ -530,9 +480,9 @@ export default function AccountTab({
               action: () => { if (onNavigate) onNavigate('bank', 'withdraw'); }
             },
             { 
-              label: 'Transfer', 
-              icon: <ArrowLeftRight className="w-5 h-5 text-blue-400" />,
-              action: () => { playClick(); setActiveOverlay('transfer'); }
+              label: 'Bank', 
+              icon: <Landmark className="w-5 h-5 text-blue-400" />,
+              action: () => { playClick(); setActiveOverlay('bank_details'); }
             },
             { 
               label: 'History', 
@@ -556,146 +506,10 @@ export default function AccountTab({
           ))}
         </div>
 
-        {/* ==================== 5. WITHDRAW CARD ==================== */}
-        <div className="glass-panel p-5 rounded-[20px] border border-[#ff3b4d]/10 bg-black/60 relative overflow-hidden backdrop-blur-md">
-          <div className="flex items-center justify-between border-b border-white/5 pb-3">
-            <div>
-              <span className="text-[9px] text-[#ff3b4d] font-bold uppercase tracking-wider block">Withdrawable Balance</span>
-              <span className="font-sans font-extrabold text-xl text-white">
-                {user.isBalanceLoading ? 'Loading...' : formatCurrency(user.walletBalance)}
-              </span>
-            </div>
-            <div className="text-right">
-              <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider block">Remaining Daily Limit</span>
-              <span className="font-mono text-zinc-300 text-xs font-semibold">
-                ₹50,000 / ₹1,00,000
-              </span>
-            </div>
-          </div>
-
-          <button
-            onClick={() => { if (onNavigate) onNavigate('bank', 'withdraw'); }}
-            onMouseEnter={() => playHover()}
-            className="w-full mt-3 py-3 rounded-xl bg-gradient-to-r from-[#ff3b4d] to-[#160000] hover:from-[#ff5565] border border-[#ff3b4d]/30 text-white font-extrabold text-xs uppercase tracking-widest transition-all hover:shadow-[0_0_15px_rgba(255,59,77,0.25)] flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
-          >
-            <span>Withdraw Now</span>
-            <ArrowUpRight className="w-4 h-4 text-white animate-bounce-horizontal" />
-          </button>
-        </div>
-
-        {/* ==================== 6. PAYMENT METHODS CARD ==================== */}
-        <div className="glass-panel p-5 rounded-[20px] border border-white/5 bg-black/40 space-y-3.5">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] text-zinc-300 font-black uppercase tracking-widest flex items-center gap-1.5">
-              <CreditCard className="w-3.5 h-3.5 text-[#ff3b4d]" />
-              <span>Linked Payment Options</span>
-            </span>
-            <span className="text-[9px] text-zinc-500 uppercase font-mono">SECURED ENCRYPTED</span>
-          </div>
-
-          <div className="space-y-2">
-            {/* Primary Linked Bank Account */}
-            {linkedBanks.map((bk) => (
-              <div 
-                key={bk.id}
-                className="flex items-center justify-between p-3 rounded-xl bg-[#090909] border border-white/5 group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-[#ff3b4d]/10 border border-[#ff3b4d]/20 rounded-lg">
-                    <PiggyBank className="w-4 h-4 text-[#ff3b4d]" />
-                  </div>
-                  <div>
-                    <span className="text-[11px] font-bold text-white uppercase block leading-tight">{bk.bankName}</span>
-                    <span className="text-[10px] text-zinc-400 font-mono tracking-wider">{bk.accountNumber}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="bg-emerald-500/10 border border-red-500/20 text-emerald-400 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded">
-                    Primary
-                  </span>
-                  {linkedBanks.length > 1 && (
-                    <button
-                      onClick={() => {
-                        playClick();
-                        setLinkedBanks(linkedBanks.filter(b => b.id !== bk.id));
-                      }}
-                      className="text-zinc-600 hover:text-[#FF3333] p-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                      title="Remove Account"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-
-            {/* Linked UPI VPA IDs */}
-            {linkedUpis.map((up) => (
-              <div 
-                key={up.id}
-                className="flex items-center justify-between p-3 rounded-xl bg-[#090909]/60 border border-white/5 group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                    <Coins className="w-4 h-4 text-blue-400" />
-                  </div>
-                  <div>
-                    <span className="text-[10.5px] font-bold text-zinc-200 block leading-tight">UPI ID (VPA)</span>
-                    <span className="text-[10px] text-zinc-300 font-mono italic">{up.vpa}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {linkedUpis.length > 1 && (
-                    <button
-                      onClick={() => {
-                        playClick();
-                        setLinkedUpis(linkedUpis.filter(u => u.id !== up.id));
-                      }}
-                      className="text-zinc-600 hover:text-[#FF3333] p-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Quick Trigger Add actions */}
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            <button
-              onClick={() => { playClick(); setActiveOverlay('add_bank'); }}
-              className="py-2 px-3 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] font-black text-white border border-white/10 uppercase tracking-widest flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5 text-[#ff3b4d]" />
-              <span>+ Link Bank</span>
-            </button>
-            <button
-              onClick={() => { playClick(); setActiveOverlay('add_upi'); }}
-              className="py-2 px-3 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] font-black text-white border border-white/10 uppercase tracking-widest flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5 text-blue-400" />
-              <span>+ Link VPA</span>
-            </button>
-          </div>
-        </div>
 
 
-        {/* Signout / Dev Control buttons */}
-        <div className="pt-2 flex flex-col items-center justify-center gap-2 w-full">
-          <button
-            onClick={() => {
-              playClick();
-              onLogout();
-            }}
-            className="text-[10px] uppercase font-sans font-black py-2 px-4 rounded-xl bg-[#FF2A2A]/10 text-[#FF2A2A] border border-[#FF2A2A]/20 hover:bg-[#FF2A2A]/20 hover:text-white hover:border-[#FF2A2A]/40 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-[0_2px_8px_rgba(255,42,42,0.1)]"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>LOGOUT</span>
-          </button>
-        </div>
+
+        {/* Signout / Dev Control buttons replaced by fixed floating footer bar at the bottom */}
 
       </div>
 
@@ -723,6 +537,16 @@ export default function AccountTab({
               {/* OVERLAY A: LINK BANK */}
               {activeOverlay === 'add_bank' && (
                 <form onSubmit={handleAddBank} className="space-y-4">
+                  <div className="flex items-center justify-between pb-1">
+                    <button
+                      type="button"
+                      onClick={() => { playClick(); setActiveOverlay('bank_details'); }}
+                      className="text-[10px] font-black uppercase text-zinc-400 hover:text-white transition-colors cursor-pointer flex items-center gap-1 bg-white/5 border border-white/10 px-2 py-1 rounded-md"
+                    >
+                      ← Back
+                    </button>
+                    <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Secure Bank Ledger</span>
+                  </div>
                   <div className="text-center">
                     <h2 className="text-base font-black text-white uppercase tracking-wider">Link Secured Bank Credentials</h2>
                     <p className="text-[11px] text-zinc-400 mt-1">Cashing out requires linking a verified recipient banking ledger.</p>
@@ -792,6 +616,16 @@ export default function AccountTab({
               {/* OVERLAY B: LINK UPI */}
               {activeOverlay === 'add_upi' && (
                 <form onSubmit={handleAddUpi} className="space-y-4">
+                  <div className="flex items-center justify-between pb-1">
+                    <button
+                      type="button"
+                      onClick={() => { playClick(); setActiveOverlay('bank_details'); }}
+                      className="text-[10px] font-black uppercase text-zinc-400 hover:text-white transition-colors cursor-pointer flex items-center gap-1 bg-white/5 border border-white/10 px-2 py-1 rounded-md"
+                    >
+                      ← Back
+                    </button>
+                    <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Secure UPI VPA</span>
+                  </div>
                   <div className="text-center">
                     <h2 className="text-base font-black text-white uppercase tracking-wider">Link Recipient UPI ID (VPA)</h2>
                     <p className="text-[11px] text-zinc-400 mt-1">Accelerates peer-to-peer micro payouts under 5 minutes.</p>
@@ -816,6 +650,109 @@ export default function AccountTab({
                     Authenticate VPA ID
                   </button>
                 </form>
+              )}
+
+              {/* OVERLAY H: BANK DETAILS */}
+              {activeOverlay === 'bank_details' && (
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <h2 className="text-base font-black text-white uppercase tracking-wider flex items-center justify-center gap-2">
+                      <CreditCard className="w-5 h-5 text-[#ff3b4d]" />
+                      <span>Bank & UPI Details</span>
+                    </h2>
+                    <p className="text-[11px] text-zinc-400 mt-1">Your secure linked payment options for payouts.</p>
+                  </div>
+
+                  <div className="space-y-2 max-h-[35vh] overflow-y-auto pr-1">
+                    {/* Primary Linked Bank Account */}
+                    {linkedBanks.map((bk) => (
+                      <div 
+                        key={bk.id}
+                        className="flex items-center justify-between p-3 rounded-xl bg-[#090909] border border-white/5 group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-[#ff3b4d]/10 border border-[#ff3b4d]/20 rounded-lg">
+                            <PiggyBank className="w-4 h-4 text-[#ff3b4d]" />
+                          </div>
+                          <div>
+                            <span className="text-[11px] font-bold text-white uppercase block leading-tight">{bk.bankName}</span>
+                            <span className="text-[10px] text-zinc-400 font-mono tracking-wider">{bk.accountNumber}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded">
+                            Primary
+                          </span>
+                          {linkedBanks.length > 1 && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                playClick();
+                                setLinkedBanks(linkedBanks.filter(b => b.id !== bk.id));
+                              }}
+                              className="text-zinc-600 hover:text-[#FF3333] p-1 opacity-100 transition-opacity cursor-pointer"
+                              title="Remove Account"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Linked UPI VPA IDs */}
+                    {linkedUpis.map((up) => (
+                      <div 
+                        key={up.id}
+                        className="flex items-center justify-between p-3 rounded-xl bg-[#090909]/60 border border-white/5 group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                            <Coins className="w-4 h-4 text-blue-400" />
+                          </div>
+                          <div>
+                            <span className="text-[10.5px] font-bold text-zinc-200 block leading-tight">UPI ID (VPA)</span>
+                            <span className="text-[10px] text-zinc-300 font-mono italic">{up.vpa}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {linkedUpis.length > 1 && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                playClick();
+                                setLinkedUpis(linkedUpis.filter(u => u.id !== up.id));
+                              }}
+                              className="text-zinc-600 hover:text-[#FF3333] p-1 opacity-100 transition-opacity cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Quick Trigger Add actions */}
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <button
+                      onClick={() => { playClick(); setActiveOverlay('add_bank'); }}
+                      className="py-2.5 px-3 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] font-black text-white border border-white/10 uppercase tracking-widest flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5 text-[#ff3b4d]" />
+                      <span>+ Link Bank</span>
+                    </button>
+                    <button
+                      onClick={() => { playClick(); setActiveOverlay('add_upi'); }}
+                      className="py-2.5 px-3 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] font-black text-white border border-white/10 uppercase tracking-widest flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5 text-blue-400" />
+                      <span>+ Link VPA</span>
+                    </button>
+                  </div>
+                </div>
               )}
 
               {/* OVERLAY C: P2P TRANSFER */}
@@ -952,7 +889,7 @@ export default function AccountTab({
                     </div>
                     <div className="flex justify-between border-b border-white/5 pb-2">
                       <span className="text-zinc-400">Transaction Daily Limit:</span>
-                      <span className="text-white font-mono">₹1,00,000 INR Payout</span>
+                      <span className="text-red-400 font-bold uppercase tracking-wider text-[10px]">{dailyWithdrawalsDone} / 3 Used Today</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-zinc-400">Registered Beneficiary Name:</span>
@@ -1090,6 +1027,23 @@ export default function AccountTab({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* FIXED LOGOUT FLOATING FOOTER BAR */}
+      <div className="fixed bottom-4 inset-x-0 mx-auto flex justify-center z-40 select-none pb-safe">
+        <div className="flex items-center justify-center p-1.5 rounded-xl bg-[#090909]/90 backdrop-blur-md border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.9)]">
+          <button
+            onClick={() => {
+              playClick();
+              onLogout();
+            }}
+            onMouseEnter={() => playHover()}
+            className="px-4 py-2 rounded-lg bg-gradient-to-r from-[#FF2A2A] to-[#ff3b4d] text-white font-sans font-black text-[9.5px] uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <LogOut className="w-3.5 h-3.5 text-white" />
+            <span>LOGOUT</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1819,7 +1819,7 @@ export default function GameSimulation({ game, user, onUpdateUser, onClose, onAd
                     {betStatus1 === 'idle' && (
                       <button
                         onClick={() => placeUserBet(1)}
-                        className="w-full h-full rounded-xl flex flex-col items-center justify-center bg-[#FF2A2A] hover:bg-[#E51B1B] active:scale-[0.98] transition-all py-1.5 shadow-[0_0_20px_rgba(255,42,42,0.6)] hover:shadow-[0_0_30px_rgba(255,42,42,0.85)] border-t border-white/20 select-none font-sans cursor-pointer"
+                        className="w-full h-full rounded-xl flex flex-col items-center justify-center bg-[#FF2A2A] hover:bg-[#E51B1B] active:scale-[0.98] transition-all py-1.5 shadow-md border-t border-white/20 select-none font-sans cursor-pointer"
                       >
                         <span className="text-white font-sans font-black text-[13px] uppercase leading-tight select-none">
                           Bet
@@ -1847,7 +1847,7 @@ export default function GameSimulation({ game, user, onUpdateUser, onClose, onAd
                     {betStatus1 === 'active' && (
                       <button
                         onClick={() => triggerUserCashout(1)}
-                        className="w-full h-full rounded-xl flex flex-col items-center justify-center bg-[#db7d05] hover:bg-[#ed8b06] active:scale-[0.98] transition-all py-1.5 shadow-[0_0_20px_rgba(219,125,5,0.65)] hover:shadow-[0_0_30px_rgba(219,125,5,0.95)] border-t border-white/20 select-none cursor-pointer"
+                        className="w-full h-full rounded-xl flex flex-col items-center justify-center bg-[#db7d05] hover:bg-[#ed8b06] active:scale-[0.98] transition-all py-1.5 shadow-md border-t border-white/20 select-none cursor-pointer"
                       >
                         <span className="text-black font-sans font-black text-[10px] uppercase tracking-wider leading-none select-none">
                           CASH OUT
@@ -2004,7 +2004,7 @@ export default function GameSimulation({ game, user, onUpdateUser, onClose, onAd
                     {betStatus2 === 'idle' && (
                       <button
                         onClick={() => placeUserBet(2)}
-                        className="w-full h-full rounded-xl flex flex-col items-center justify-center bg-[#FF2A2A] hover:bg-[#E51B1B] active:scale-[0.98] transition-all py-1.5 shadow-[0_0_20px_rgba(255,42,42,0.6)] hover:shadow-[0_0_30px_rgba(255,42,42,0.85)] border-t border-white/20 select-none font-sans cursor-pointer"
+                        className="w-full h-full rounded-xl flex flex-col items-center justify-center bg-[#FF2A2A] hover:bg-[#E51B1B] active:scale-[0.98] transition-all py-1.5 shadow-md border-t border-white/20 select-none font-sans cursor-pointer"
                       >
                         <span className="text-white font-sans font-black text-[13px] uppercase leading-tight select-none">
                           Bet
@@ -2032,7 +2032,7 @@ export default function GameSimulation({ game, user, onUpdateUser, onClose, onAd
                     {betStatus2 === 'active' && (
                       <button
                         onClick={() => triggerUserCashout(2)}
-                        className="w-full h-full rounded-xl flex flex-col items-center justify-center bg-[#db7d05] hover:bg-[#ed8b06] active:scale-[0.98] transition-all py-1.5 shadow-[0_0_20px_rgba(219,125,5,0.65)] hover:shadow-[0_0_30px_rgba(219,125,5,0.95)] border-t border-white/20 select-none cursor-pointer"
+                        className="w-full h-full rounded-xl flex flex-col items-center justify-center bg-[#db7d05] hover:bg-[#ed8b06] active:scale-[0.98] transition-all py-1.5 shadow-md border-t border-white/20 select-none cursor-pointer"
                       >
                         <span className="text-black font-sans font-black text-[10px] uppercase tracking-wider leading-none select-none">
                           CASH OUT

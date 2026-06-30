@@ -47,6 +47,27 @@ async function getAuthUser(req: express.Request) {
       const exists = db.users.some((u: any) => u.id === userId || u.user_id === userId);
       if (!exists) {
         console.log(`[getAuthUser] Local Fallback: Auto-registering mock user ${username} in memory db...`);
+        const referredByHeader = req.headers["x-referred-by"] || "";
+        const referredByCode = parts[4] || referredByHeader || "";
+        let referrerId = "";
+
+        if (referredByCode) {
+          const referrerUser = db.users.find((u: any) => u.referral_code === referredByCode || u.id === referredByCode || u.username === referredByCode);
+          if (referrerUser) {
+            referrerId = referrerUser.id;
+            console.log(`[Local Fallback] Found referrer: ${referrerId} using code: ${referredByCode}`);
+            // Reward referrer's mock wallet with 250 INR
+            if (db.wallets) {
+              const refWallet = db.wallets.find((w: any) => w.id === referrerId);
+              if (refWallet) {
+                refWallet.balance = (refWallet.balance || 0) + 250;
+              }
+            }
+          }
+        }
+
+        const generatedRefCode = `TNZ_${username.toUpperCase().replace(/\s+/g, '')}_${Math.floor(100 + Math.random() * 900)}`;
+
         const newUser = {
           id: userId,
           user_id: userId,
@@ -58,8 +79,8 @@ async function getAuthUser(req: express.Request) {
           security_id: "SEC-" + Math.floor(1000 + Math.random() * 9000),
           balance: 1000,
           bonus_balance: 100,
-          referral_code: "TENZO_ROYAL_77",
-          referred_by: "",
+          referral_code: generatedRefCode,
+          referred_by: referrerId,
           vip_level: "1",
           status: "Active",
           kyc_status: "Approved",
@@ -128,6 +149,15 @@ async function getAuthUser(req: express.Request) {
           const username = user.user_metadata?.username || email.split("@")[0] || "User";
           const avatar = user.user_metadata?.avatar || "";
 
+          // Self-healing: Clean up any stale records in users and profiles that have the same email or username but a different ID
+          if (email) {
+            await client.query("DELETE FROM users WHERE (email = $1 OR username = $2) AND id <> $3", [email, username, userId]);
+            await client.query("DELETE FROM profiles WHERE username = $1 AND id <> $2", [username, userId]);
+          } else {
+            await client.query("DELETE FROM users WHERE username = $1 AND id <> $2", [username, userId]);
+            await client.query("DELETE FROM profiles WHERE username = $1 AND id <> $2", [username, userId]);
+          }
+
           // Check/Create profile
           const profCheck = await client.query("SELECT id FROM profiles WHERE id = $1", [userId]);
           if (profCheck.rows.length === 0) {
@@ -154,11 +184,48 @@ async function getAuthUser(req: express.Request) {
           const userCheck = await client.query("SELECT id FROM users WHERE id = $1", [userId]);
           if (userCheck.rows.length === 0) {
             console.log(`[getAuthUser] Auto-creating missing users row for ${userId}`);
+            
+            // Check x-referred-by or user metadata for referrer code
+            const referredByHeader = (req.headers["x-referred-by"] || "") as string;
+            const referredByCode = (user.user_metadata?.referred_by_code || referredByHeader || "") as string;
+            let referrerId = "";
+            
+            if (referredByCode) {
+              const refUserCheck = await client.query("SELECT id FROM users WHERE referral_code = $1 OR id = $2 OR username = $3", [referredByCode, referredByCode, referredByCode]);
+              if (refUserCheck.rows.length > 0) {
+                referrerId = refUserCheck.rows[0].id;
+                console.log(`[getAuthUser] Postgres: User ${userId} referred by ${referrerId} using code ${referredByCode}`);
+              }
+            }
+
+            const generatedRefCode = `TNZ_${username.toUpperCase().replace(/\s+/g, '')}_${Math.floor(100 + Math.random() * 900)}`;
+
             await client.query(
               `INSERT INTO users (id, user_id, full_name, username, email, phone, avatar, security_id, balance, bonus_balance, referral_code, referred_by, vip_level, status, kyc_status, created_at, balance_version)
-               VALUES ($1, $2, $3, $4, $5, '', $6, '', 0, 0, 'TENZO_ROYAL_77', '', '1', 'Active', 'Approved', $7, 0)`,
-              [userId, userId, username, username, email, avatar, new Date().toISOString()]
+               VALUES ($1, $2, $3, $4, $5, '', $6, '', 1000, 100, $7, $8, '1', 'Active', 'Approved', $9, 0)`,
+              [userId, userId, username, username, email, avatar, generatedRefCode, referrerId, new Date().toISOString()]
             );
+
+            // Ensure wallet also starts with 1000 INR and 100 Bonus INR
+            await client.query(
+              `UPDATE wallets SET balance = 1000, bonus_balance = 100 WHERE id = $1`,
+              [userId]
+            );
+
+            // Insert referral commission tracker row if referrer was found
+            if (referrerId) {
+              const referralId = `ref-${userId.slice(-6)}-${Math.floor(1000 + Math.random() * 9000)}`;
+              await client.query(
+                `INSERT INTO referrals (referral_id, referrer_user_id, referred_user_id, commission, status, created_at)
+                 VALUES ($1, $2, $3, 250, 'active', $4)`,
+                [referralId, referrerId, userId, new Date().toISOString()]
+              );
+              // Give referrer 250 INR reward!
+              await client.query(
+                `UPDATE wallets SET balance = balance + 250 WHERE id = $1`,
+                [referrerId]
+              );
+            }
           }
 
           await client.query("COMMIT");

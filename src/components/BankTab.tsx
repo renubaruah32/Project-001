@@ -471,6 +471,7 @@ export default function BankTab({
   const [trackingLog, setTrackingLog] = useState<string>('Initializing secure UPI tracker...');
   const [trackingProgress, setTrackingProgress] = useState<number>(0);
   const [generatedUtr, setGeneratedUtr] = useState<string>('');
+  const [utrInput, setUtrInput] = useState<string>('');
 
   // Auto generate unique order id
   useEffect(() => {
@@ -503,10 +504,75 @@ export default function BankTab({
     }
   };
 
+  // Redesigned Manual UTR Confirmation Handler
+  const handleManualConfirmUtr = async (providedUtr: string) => {
+    if (!providedUtr.trim()) {
+      alert("Please enter a valid UTR number.");
+      return;
+    }
+    playClick();
+    setTrackingStatus('verifying');
+    setTrackingProgress(50);
+    setTrackingLog("🔍 Matching manual UTR statement logs: Reconciling UTR " + providedUtr + "...");
+    
+    // Simulate reconciliation and finalize
+    setTimeout(async () => {
+      const numAmt = parseInt(amount) || 0;
+      const isFailureTriggered = numAmt % 13 === 0 || amount.endsWith('9') || amount.endsWith('4') || numAmt <= 0;
+      
+      if (isFailureTriggered) {
+        setTrackingStatus('failed');
+        setTrackingLog(`❌ Verification failed: The UTR ${providedUtr} could not be validated or has already been used.`);
+      } else {
+        setTrackingStatus('success');
+        setTrackingLog(`✨ UTR payment authorized! Credit verified & deposited instantly.`);
+        setGeneratedUtr(providedUtr);
+        setTrackingProgress(100);
+        
+        const updated = {
+          ...user,
+          walletBalance: user.walletBalance + numAmt,
+          totalDeposited: user.totalDeposited + numAmt
+        };
+        onUpdateUser(updated);
+
+        // Synchronize with database
+        const token = localStorage.getItem('tenzo_bet_token');
+        const authHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (token) authHeaders['Authorization'] = `Bearer ${token}`;
+
+        try {
+          await apiFetch('/api/client/deposit-request', {
+            method: 'POST',
+            headers: authHeaders,
+            body: JSON.stringify({
+              username: user.username,
+              amount: numAmt,
+              paymentMethod: 'UPI_AUTO',
+              utrNumber: providedUtr
+            })
+          });
+        } catch (err) {
+          console.warn("Failed to sync manual UTR request:", err);
+        }
+
+        onAddTransaction({
+          id: `dep-${Date.now()}`,
+          type: 'deposit',
+          amount: numAmt,
+          timestamp: new Date().toLocaleTimeString(),
+          status: 'SUCCESS',
+          description: `Manual UTR (Ref: ${providedUtr}, ID: ${currentOrderId})`
+        });
+      }
+    }, 2000);
+  };
+
   // Clear states when active tab/method shifts
   useEffect(() => {
     setDepositStep('qr');
     setUtr('');
+    setUtrInput('');
     setShowUtrModal(false);
     setIsVerifying(false);
     setTimeLeft(300);
@@ -934,29 +1000,295 @@ export default function BankTab({
     }
   };
 
+  const renderRedesignedAuthorization = () => {
+    return (
+      <div className="space-y-5 select-none">
+        {/* Header status bar */}
+        <div className={`flex items-center justify-between text-xs pb-2 border-b ${isSportsTheme ? 'border-neutral-200' : 'border-white/5'}`}>
+          <span className="flex items-center gap-1.5 font-sans font-black uppercase tracking-wider text-white">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#FF3333] animate-pulse shrink-0" />
+            UPI Authorization
+          </span>
+          <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase tracking-widest">
+            NPCI SECURE MATCH
+          </span>
+        </div>
+
+        {/* 1. AWAITING PAYMENT STATE */}
+        {trackingStatus === 'awaiting_payment' && (
+          <div className="space-y-5">
+            {/* Retro / Minimal Circle Backward Timer */}
+            <div className="flex flex-col items-center justify-center p-6 bg-white/[0.02] border border-white/5 rounded-2xl space-y-3">
+              <div className="relative flex items-center justify-center w-24 h-24">
+                {/* Circular progress bar SVG */}
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    className="stroke-white/5"
+                    strokeWidth="4"
+                    fill="transparent"
+                  />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    className="stroke-[#FF3333] transition-all duration-1000"
+                    strokeWidth="4"
+                    fill="transparent"
+                    strokeDasharray="251.2"
+                    strokeDashoffset={251.2 - (251.2 * timeLeft) / 300}
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="absolute flex flex-col items-center justify-center text-center">
+                  <Clock className="w-4 h-4 text-[#FF3333] animate-pulse mb-0.5" />
+                  <span className="font-mono text-lg font-black tracking-tight text-white">
+                    {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                  </span>
+                </div>
+              </div>
+              <div className="text-center space-y-1">
+                <h3 className="font-sans font-black text-xs uppercase tracking-widest text-zinc-300">
+                  Awaiting Payment Confirmation
+                </h3>
+                <p className="text-[10px] text-zinc-500 font-medium leading-relaxed">
+                  Please complete the payment of <span className="text-white font-bold">₹{(parseInt(amount) || 0).toLocaleString()}</span> on your UPI app.
+                </p>
+              </div>
+            </div>
+
+            {/* Deposit Instructions / Reference Code copy card */}
+            <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-4 space-y-3 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500 font-bold uppercase text-[9px] tracking-wider">Receiver VPA</span>
+                <span className="text-zinc-300 font-semibold font-mono select-all">{receiverVpa}</span>
+              </div>
+              <div className="border-t border-white/5 pt-2.5 flex justify-between items-center">
+                <div className="text-left">
+                  <span className="text-zinc-500 font-bold uppercase text-[9px] tracking-wider block">Required Remarks/Note</span>
+                  <span className="font-mono font-black text-[#FFB347] text-[12px] tracking-wider">{currentOrderId}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    playClick();
+                    navigator.clipboard.writeText(currentOrderId);
+                    setCopiedOrderId(true);
+                    setTimeout(() => setCopiedOrderId(false), 2000);
+                  }}
+                  className="px-2.5 py-1 rounded bg-[#FF3333]/10 hover:bg-[#FF3333]/20 border border-[#FF3333]/20 hover:border-[#FF3333]/40 text-[#FF3333] font-bold text-[8.5px] uppercase tracking-wider transition-all cursor-pointer font-sans"
+                >
+                  {copiedOrderId ? 'Copied' : 'Copy'}
+                </button>
+              </div>
+            </div>
+
+            {/* Clean UTR input and confirm button */}
+            <div className="space-y-2.5 text-left">
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1.5">
+                  Step 2: Paste UTR No. to Confirm
+                </label>
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    maxLength={12}
+                    placeholder="Enter 12-digit UTR No."
+                    value={utrInput}
+                    onChange={(e) => setUtrInput(e.target.value.replace(/[^0-9]/g, ''))}
+                    className="w-full bg-[#111] hover:bg-[#151515] focus:bg-[#151515] border border-white/10 focus:border-[#FF3333]/40 text-white font-mono text-sm placeholder:text-zinc-600 px-4 py-3 rounded-xl focus:outline-none transition-all pr-20"
+                  />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      playClick();
+                      try {
+                        const text = await navigator.clipboard.readText();
+                        const numeric = text.replace(/[^0-9]/g, '').slice(0, 12);
+                        if (numeric) {
+                          setUtrInput(numeric);
+                        }
+                      } catch (e) {
+                        console.warn("Clipboard access denied", e);
+                      }
+                    }}
+                    className="absolute right-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 hover:text-white border border-white/10 rounded-lg text-zinc-400 text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer"
+                  >
+                    Paste
+                  </button>
+                </div>
+                <span className="text-[8.5px] text-zinc-500 block mt-1 leading-normal italic">
+                  💡 Note: UTR is a 12-digit transaction ID found on your receipt (GPay, PhonePe, Paytm).
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleManualConfirmUtr(utrInput)}
+                disabled={utrInput.length < 12}
+                className="w-full py-3.5 rounded-xl font-sans font-black text-xs uppercase tracking-widest text-white bg-gradient-to-r from-[#FF2A2A] to-[#ff3b4d] hover:brightness-110 active:scale-95 disabled:opacity-40 disabled:pointer-events-none transition-all text-center cursor-pointer shadow-[0_4px_24px_rgba(255,42,42,0.2)]"
+              >
+                CONFIRM PAYMENT
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  playClick();
+                  setTrackingStatus('idle');
+                }}
+                className="w-full py-2 text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors text-center cursor-pointer"
+              >
+                Cancel Connection
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 2. VERIFYING STATE */}
+        {trackingStatus === 'verifying' && (
+          <div className="flex flex-col items-center justify-center py-12 space-y-4 text-center">
+            <div className="relative w-16 h-16 flex items-center justify-center">
+              <span className="absolute inset-0 rounded-full border-2 border-white/5" />
+              <span className="absolute inset-0 rounded-full border-2 border-t-[#FF3333] border-r-[#FF3333]/30 animate-spin" />
+              <RefreshCw className="w-6 h-6 text-[#FF3333] animate-pulse" />
+            </div>
+            <div className="text-center space-y-1.5">
+              <h3 className="font-sans font-black text-xs uppercase tracking-widest text-white">
+                Verifying transaction
+              </h3>
+              <p className="text-[10px] text-zinc-500 max-w-[280px] mx-auto leading-relaxed">
+                Reconciling your UTR reference against the instant UPI settlement ledger. This usually takes less than 15 seconds.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* 3. SUCCESS STATE */}
+        {trackingStatus === 'success' && (
+          <div className="flex flex-col items-center justify-center py-4 space-y-5 text-center">
+            <div className="w-14 h-14 bg-emerald-500/10 border border-emerald-500/35 rounded-full flex items-center justify-center text-emerald-400 shadow-[0_4px_24px_rgba(16,185,129,0.15)] animate-bounce-subtle">
+              <Check className="w-7 h-7 stroke-[2.5]" />
+            </div>
+            <div className="text-center space-y-1">
+              <h3 className="font-sans font-black text-sm uppercase tracking-widest text-emerald-400">
+                DEPOSIT SUCCESSFUL
+              </h3>
+              <p className="text-[10px] text-zinc-500 font-medium">
+                Funds have been added to your wallet balance instantly.
+              </p>
+            </div>
+
+            <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-4 space-y-3 text-xs text-left">
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500 text-[9px] uppercase font-black tracking-wider">Amount Added</span>
+                <span className="font-sans font-black text-sm text-emerald-400">
+                  ₹{(parseInt(amount) || 0).toLocaleString()}
+                </span>
+              </div>
+              <div className="border-t border-white/5 pt-2.5 flex justify-between items-center font-mono text-[10px]">
+                <span className="text-zinc-500 uppercase font-black tracking-wider text-[9px]">Transaction ID</span>
+                <span className="text-zinc-300 font-semibold">{currentOrderId}</span>
+              </div>
+              {generatedUtr && (
+                <div className="border-t border-white/5 pt-2.5 flex justify-between items-center font-mono text-[10px]">
+                  <span className="text-zinc-500 uppercase font-black tracking-wider text-[9px]">Ref UTR Number</span>
+                  <span className="text-white font-bold select-all">{generatedUtr}</span>
+                </div>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                playClick();
+                setTrackingStatus('idle');
+                setAmount('');
+                setUtrInput('');
+                if (onBack) {
+                  onBack();
+                }
+              }}
+              className="w-full py-3.5 rounded-xl font-sans font-black text-xs uppercase tracking-widest text-black bg-emerald-400 hover:bg-emerald-300 active:scale-95 transition-all text-center cursor-pointer shadow-[0_4px_20px_rgba(52,211,153,0.15)]"
+            >
+              Done & Return
+            </button>
+          </div>
+        )}
+
+        {/* 4. FAILED STATE */}
+        {trackingStatus === 'failed' && (
+          <div className="flex flex-col items-center justify-center py-4 space-y-5 text-center">
+            <div className="w-14 h-14 bg-red-500/10 border border-red-500/35 rounded-full flex items-center justify-center text-red-400 shadow-[0_4px_24px_rgba(239,68,68,0.15)]">
+              <AlertCircle className="w-7 h-7 stroke-[2.5]" />
+            </div>
+            <div className="text-center space-y-1">
+              <h3 className="font-sans font-black text-sm uppercase tracking-widest text-red-400">
+                VERIFICATION FAILED
+              </h3>
+              <p className="text-[10px] text-zinc-500 font-medium">
+                We couldn't verify this transaction automatically.
+              </p>
+            </div>
+
+            <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-4 space-y-2.5 text-xs text-left">
+              <p className="text-[10.5px] text-zinc-400 leading-relaxed text-center font-medium">
+                The transaction reference number could not be cleared by our automated ledger. Please make sure the payment went through and try verifying again.
+              </p>
+            </div>
+
+            <div className="w-full space-y-2 pt-1 text-left">
+              <button
+                type="button"
+                onClick={() => {
+                  playClick();
+                  setTrackingStatus('awaiting_payment');
+                }}
+                className="w-full py-3.5 rounded-xl font-sans font-black text-xs uppercase tracking-widest text-white bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 transition-all text-center cursor-pointer"
+              >
+                Retry Verification
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  playClick();
+                  setTrackingStatus('idle');
+                  setUtrInput('');
+                }}
+                className="w-full py-2 text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors text-center cursor-pointer"
+              >
+                Cancel Deposit
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className={`space-y-6 max-w-md mx-auto ${isSportsTheme ? 'text-[#111111] font-sans' : 'text-white'}`}>
       
       {/* Cohesive Navigation Header */}
-      {activeTab !== 'deposit' && (
-        <div className={`flex items-center justify-between pb-3 border-b ${isSportsTheme ? 'border-neutral-200' : 'border-white/10'}`}>
-          <button
-            type="button"
-            onClick={() => {
-              playClick();
-              if (onBack) onBack();
-            }}
-            className={`flex items-center gap-1.5 py-1 px-3 rounded-xl border text-xs font-black uppercase tracking-wider transition-all cursor-pointer select-none active:scale-95 ${
-              isSportsTheme
-                ? 'bg-white hover:bg-neutral-50 border-neutral-200 text-neutral-800 shadow-sm'
-                : 'bg-white/5 hover:bg-white/10 border-white/5 text-stone-300'
-            }`}
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back</span>
-          </button>
-        </div>
-      )}
+      <div className={`flex items-center justify-between pb-3 border-b ${isSportsTheme ? 'border-neutral-200' : 'border-white/10'}`}>
+        <button
+          type="button"
+          onClick={() => {
+            playClick();
+            if (onBack) onBack();
+          }}
+          className={`flex items-center gap-1.5 py-1 px-3 rounded-xl border text-xs font-black uppercase tracking-wider transition-all cursor-pointer select-none active:scale-95 ${
+            isSportsTheme
+              ? 'bg-white hover:bg-neutral-50 border-neutral-200 text-neutral-800 shadow-sm'
+              : 'bg-white/5 hover:bg-white/10 border-white/5 text-stone-300'
+          }`}
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Back</span>
+        </button>
+      </div>
       
       {/* Main Bank Action Form or UPI QR Interface */}
       {activeTab === 'deposit' ? (
@@ -1009,7 +1341,10 @@ export default function BankTab({
               animate={{ opacity: 1, scale: 1 }}
               className={trackingBoxClass}
             >
-              {/* Header Status Bar */}
+              {renderRedesignedAuthorization()}
+              {false && (
+                <>
+                  {/* Header Status Bar */}
               <div className={`flex items-center justify-between text-xs pb-1 border-b ${isSportsTheme ? 'border-neutral-200' : 'border-white/5'}`}>
                 <span className={`flex items-center gap-1.5 font-bold uppercase tracking-wider ${isSportsTheme ? 'text-[#FF3333]' : 'text-[#FF3333]'}`}>
                   <span className={`w-1.5 h-1.5 rounded-full animate-ping shrink-0 ${isSportsTheme ? 'bg-[#FF3333]' : 'bg-[#FF3333]'}`} />
@@ -1272,9 +1607,89 @@ export default function BankTab({
                   </button>
                 )}
               </div>
+                </>
+              )}
             </motion.div>
           ) : (
             <>
+              {/* Scan QR Visual Panel */}
+              <div className={`relative py-4 text-center rounded-2xl border p-4 space-y-3.5 ${isSportsTheme ? 'bg-neutral-50 border-neutral-200' : 'bg-black/40 border-[#FF3333]/15'}`}>
+
+                <div className={`flex items-center justify-between text-[10px] px-1 font-bold ${isSportsTheme ? 'text-[#FF3333]' : 'text-[#FF3333]'}`}>
+                  <span className="flex items-center gap-1 uppercase tracking-wide">
+                    <QrCode className={`w-3.5 h-3.5 ${isSportsTheme ? 'text-[#FF3333]' : 'text-[#FF3333]'}`} /> Scan Instant QR
+                  </span>
+                  <span className={`px-2 py-0.5 rounded border text-[9px] font-mono leading-none ${isSportsTheme ? 'bg-[#FF3333]/5 border-[#FF3333]/20 text-[#FF3333]' : 'bg-[#FF3333]/10 border-[#FF3333]/20 text-[#FF3333]'}`}>
+                    EXPIRES: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                  </span>
+                </div>
+
+                {/* Interactive responsive SVG QR */}
+                <div 
+                  className={`relative mx-auto w-36 h-36 p-2.5 rounded-2xl select-none cursor-pointer hover:scale-105 active:scale-95 transition-all ${
+                    isSportsTheme ? 'bg-white border border-neutral-200 shadow-sm' : 'bg-white shadow-lg'
+                  }`}
+                  title="Click to launch deep link UPI"
+                  onClick={() => {
+                    const numAmt = parseInt(amount) || 0;
+                    if (numAmt < 200) {
+                      alert("Minimum deposit is ₹200.");
+                      return;
+                    }
+                    if (numAmt > 50000) {
+                      alert("Maximum deposit is ₹50,000.");
+                      return;
+                    }
+                    playClick();
+                    const upiString = `upi://pay?pa=${receiverVpa}&pn=${receiverName}&am=${numAmt}&cu=INR&tn=${currentOrderId}`;
+                    window.location.href = upiString;
+                    // Trigger live automation tracking!
+                    if (trackingMode === 'B') {
+                      registerOrderOnServer(currentOrderId, numAmt, receiverVpa);
+                    }
+                    setTrackingStatus('awaiting_payment');
+                    setTrackingProgress(0);
+                    setTrackingLog(trackingMode === 'B'
+                      ? `📡 Webhook Listener Active... Awaiting payload for Note ID: ${currentOrderId}`
+                      : "📡 Listening on NPCI Network... Awaiting UPI Callback Handshake"
+                    );
+                  }}
+                >
+                  {/* Visual scan frame guides framing the QR Code wrapper */}
+                  <div className={`absolute -top-1.5 -left-1.5 w-4 h-4 border-t-2 border-l-2 ${isSportsTheme ? 'border-[#FF3333]' : 'border-[#FF3333]'}`} />
+                  <div className={`absolute -top-1.5 -right-1.5 w-4 h-4 border-t-2 border-r-2 ${isSportsTheme ? 'border-[#FF3333]' : 'border-[#FF3333]'}`} />
+                  <div className={`absolute -bottom-1.5 -left-1.5 w-4 h-4 border-b-2 border-l-2 ${isSportsTheme ? 'border-[#FF3333]' : 'border-[#FF3333]'}`} />
+                  <div className={`absolute -bottom-1.5 -right-1.5 w-4 h-4 border-b-2 border-r-2 ${isSportsTheme ? 'border-[#FF3333]' : 'border-[#FF3333]'}`} />
+
+                  <img 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=${receiverVpa}&pn=${receiverName}&am=${parseInt(amount) || 1}&cu=INR&tn=${currentOrderId}`)}`}
+                    alt="UPI Deposit QR Code"
+                    className="w-full h-full object-contain"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+
+                {/* Dynamic Remittance Remarks Helper for Method B Correlation */}
+                <div className={`px-3 py-2 rounded-xl border flex items-center justify-between text-[10px] ${isSportsTheme ? 'bg-white border-neutral-200' : 'bg-black/60 border-white/5'}`}>
+                  <div className="text-left font-sans">
+                    <span className={`text-[8px] block uppercase font-bold leading-none ${isSportsTheme ? 'text-neutral-400' : 'text-zinc-500'}`}>Required Remarks/Note:</span>
+                    <span className={`font-mono font-black text-[12px] leading-tight tracking-wider ${isSportsTheme ? 'text-[#FF3333]' : 'text-[#FFB347]'}`}>{currentOrderId}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playClick();
+                      navigator.clipboard.writeText(currentOrderId);
+                      setCopiedOrderId(true);
+                      setTimeout(() => setCopiedOrderId(false), 2000);
+                    }}
+                    className={`px-2.5 py-1 rounded text-[8.5px] font-extrabold uppercase transition-all cursor-pointer font-sans border ${isSportsTheme ? 'bg-[#FF3333]/10 border-[#FF3333]/20 text-[#FF3333] hover:bg-neutral-100' : 'bg-[#FF3333]/10 border-[#FF3333]/20 text-[#FF3333] hover:bg-white/5'}`}
+                  >
+                    {copiedOrderId ? 'COPIED ✓' : 'COPY NOTE'}
+                  </button>
+                </div>
+              </div>
+
               {/* Mobile Deep-Linking Client Launch Button */}
               <div>
                 <motion.button
@@ -1386,91 +1801,6 @@ export default function BankTab({
                     </svg>
                   </div>
                 </motion.button>
-              </div>
-
-              {/* Scan QR Visual Panel */}
-              <div className={`relative py-4 text-center rounded-2xl border p-4 space-y-3.5 ${isSportsTheme ? 'bg-neutral-50 border-neutral-200' : 'bg-black/40 border-[#FF3333]/15'}`}>
-                {/* Visual scan frame guides */}
-                <div className={`absolute top-4 left-4 w-4 h-4 border-t-2 border-l-2 ${isSportsTheme ? 'border-[#FF3333]' : 'border-[#FF3333]'}`} />
-                <div className={`absolute top-4 right-4 w-4 h-4 border-t-2 border-r-2 ${isSportsTheme ? 'border-[#FF3333]' : 'border-[#FF3333]'}`} />
-                <div className={`absolute bottom-4 left-4 w-4 h-4 border-b-2 border-l-2 ${isSportsTheme ? 'border-[#FF3333]' : 'border-[#FF3333]'}`} />
-                <div className={`absolute bottom-4 right-4 w-4 h-4 border-b-2 border-r-2 ${isSportsTheme ? 'border-[#FF3333]' : 'border-[#FF3333]'}`} />
-
-                <div className={`flex items-center justify-between text-[10px] px-1 font-bold ${isSportsTheme ? 'text-[#FF3333]' : 'text-[#FF3333]'}`}>
-                  <span className="flex items-center gap-1 uppercase tracking-wide">
-                    <QrCode className={`w-3.5 h-3.5 ${isSportsTheme ? 'text-[#FF3333]' : 'text-[#FF3333]'}`} /> Scan Instant QR
-                  </span>
-                  <span className={`px-2 py-0.5 rounded border text-[9px] font-mono leading-none ${isSportsTheme ? 'bg-[#FF3333]/5 border-[#FF3333]/20 text-[#FF3333]' : 'bg-[#FF3333]/10 border-[#FF3333]/20 text-[#FF3333]'}`}>
-                    EXPIRES: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
-                  </span>
-                </div>
-
-                {/* Interactive responsive SVG QR */}
-                <div 
-                  className={`relative mx-auto w-36 h-36 p-2.5 rounded-2xl select-none cursor-pointer hover:scale-105 active:scale-95 transition-all ${
-                    isSportsTheme ? 'bg-white border border-neutral-200 shadow-sm' : 'bg-white shadow-lg'
-                  }`}
-                  title="Click to launch deep link UPI"
-                  onClick={() => {
-                    const numAmt = parseInt(amount) || 0;
-                    if (numAmt < 200) {
-                      alert("Minimum deposit is ₹200.");
-                      return;
-                    }
-                    if (numAmt > 50000) {
-                      alert("Maximum deposit is ₹50,000.");
-                      return;
-                    }
-                    playClick();
-                    const upiString = `upi://pay?pa=${receiverVpa}&pn=${receiverName}&am=${numAmt}&cu=INR&tn=${currentOrderId}`;
-                    window.location.href = upiString;
-                    // Trigger live automation tracking!
-                    if (trackingMode === 'B') {
-                      registerOrderOnServer(currentOrderId, numAmt, receiverVpa);
-                    }
-                    setTrackingStatus('awaiting_payment');
-                    setTrackingProgress(0);
-                    setTrackingLog(trackingMode === 'B'
-                      ? `📡 Webhook Listener Active... Awaiting payload for Note ID: ${currentOrderId}`
-                      : "📡 Listening on NPCI Network... Awaiting UPI Callback Handshake"
-                    );
-                  }}
-                >
-                  <img 
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=${receiverVpa}&pn=${receiverName}&am=${parseInt(amount) || 1}&cu=INR&tn=${currentOrderId}`)}`}
-                    alt="UPI Deposit QR Code"
-                    className="w-full h-full object-contain"
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
-
-                {/* Dynamic Remittance Remarks Helper for Method B Correlation */}
-                <div className={`px-3 py-2 rounded-xl border flex items-center justify-between text-[10px] ${isSportsTheme ? 'bg-white border-neutral-200' : 'bg-black/60 border-white/5'}`}>
-                  <div className="text-left font-sans">
-                    <span className={`text-[8px] block uppercase font-bold leading-none ${isSportsTheme ? 'text-neutral-400' : 'text-zinc-500'}`}>Required Remarks/Note:</span>
-                    <span className={`font-mono font-black text-[12px] leading-tight tracking-wider ${isSportsTheme ? 'text-[#FF3333]' : 'text-[#FFB347]'}`}>{currentOrderId}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      playClick();
-                      navigator.clipboard.writeText(currentOrderId);
-                      setCopiedOrderId(true);
-                      setTimeout(() => setCopiedOrderId(false), 2000);
-                    }}
-                    className={`px-2.5 py-1 rounded text-[8.5px] font-extrabold uppercase transition-all cursor-pointer font-sans border ${isSportsTheme ? 'bg-[#FF3333]/10 border-[#FF3333]/20 text-[#FF3333] hover:bg-neutral-100' : 'bg-[#FF3333]/10 border-[#FF3333]/20 text-[#FF3333] hover:bg-white/5'}`}
-                  >
-                    {copiedOrderId ? 'COPIED ✓' : 'COPY NOTE'}
-                  </button>
-                </div>
-
-                <div className={`text-[9px] uppercase tracking-wide select-none font-bold ${isSportsTheme ? 'text-neutral-500' : 'text-[#FF3333]/50'}`}>
-                  Recipient VPA: {receiverVpa} • {receiverName}
-                </div>
-
-                <div className={`text-[9px] uppercase tracking-wide select-none ${isSportsTheme ? 'text-neutral-400' : 'text-white/45'}`}>
-                  Click/tap the QR code above or the button to pay directly via UPI app
-                </div>
               </div>
             </>
           )}

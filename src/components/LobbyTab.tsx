@@ -305,28 +305,28 @@ export default function LobbyTab({
     <div className="space-y-4 select-none relative pb-10 pt-0">
 
       {/* Wrapping Ticker and Hero together with a tighter gap to reduce spacing */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1">
         {/* LIVE MEGA WINS TICKER (Social Proof) - Placed between Header and Hero */}
-        <div className="relative w-full overflow-hidden bg-[#111111]/35 border border-white/5 rounded-lg py-1 px-2.5 flex items-center gap-2 select-none h-7">
-          {/* Blinking Live Label */}
-          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#FF2348]/10 border border-[#FF2348]/20 shrink-0 z-10">
+        <div className="relative w-full overflow-hidden bg-transparent border-none px-2 flex items-center gap-2 select-none h-6">
+          {/* Blinking Live Label - Sleek and minimal, no heavy button capsule */}
+          <div className="flex items-center gap-1 px-1 shrink-0 z-10">
             <span className="relative flex h-1 w-1">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF2348] opacity-75"></span>
               <span className="relative inline-flex rounded-full h-1 w-1 bg-[#FF2348]"></span>
             </span>
-            <span className="text-[7.5px] font-sans font-black uppercase tracking-wider text-[#FFFF]/95 whitespace-nowrap">
+            <span className="text-[7.5px] font-sans font-black uppercase tracking-widest text-[#FF2348] whitespace-nowrap">
               LIVE WINS
             </span>
           </div>
 
           {/* Scroll Area */}
-          <div className="relative flex-1 overflow-hidden h-4 flex items-center">
+          <div className="relative flex-1 overflow-hidden h-full flex items-center">
             {/* High-end Edge Fade Gradients */}
             <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-[#111111]/80 to-transparent pointer-events-none z-10" />
             <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-[#111111]/80 to-transparent pointer-events-none z-10" />
 
             <div 
-              className="animate-marquee flex items-center gap-8 text-[9.5px] font-mono font-medium text-stone-300 uppercase tracking-wide"
+              className="animate-marquee flex items-center gap-8 text-[9px] font-mono font-medium text-stone-300 uppercase tracking-wide h-full"
               style={{ animationDuration: '24s' }}
             >
               {[

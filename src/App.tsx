@@ -52,6 +52,7 @@ import {
   Shield,
   Globe,
   Zap,
+  ArrowLeft,
   X
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
@@ -310,6 +311,14 @@ export default function App() {
   };
 
   useEffect(() => {
+    // Capture referral links (using ref or code query parameters) and store securely in localStorage
+    const params = new URLSearchParams(window.location.search);
+    const refCode = params.get('ref') || params.get('code');
+    if (refCode) {
+      console.log("[Referral System] Extracted referral code from link:", refCode);
+      localStorage.setItem('referred_by_code', refCode);
+    }
+
     // Dynamic Supabase configuration fetching from custom config manager
     apiFetch("/api/db/credentials")
       .then(r => r.json())
@@ -610,6 +619,10 @@ export default function App() {
         const headers: Record<string, string> = {};
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
+        }
+        const referredByCode = localStorage.getItem('referred_by_code');
+        if (referredByCode) {
+          headers['x-referred-by'] = referredByCode;
         }
         const res = await apiFetch('/api/db', { headers });
         if (res.status === 401) {
@@ -983,15 +996,14 @@ export default function App() {
               opacity: isHeaderVisible ? 1 : 0
             }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="fixed top-0 left-0 right-0 z-[9999] h-[84px] bg-[#111111]/90 backdrop-blur-md px-4 flex items-center justify-between select-none border-b border-[#FF2348]/45 rounded-none shadow-[0_4px_35px_rgba(255,35,72,0.35),_0_10px_30px_rgba(0,0,0,0.9)]"
+            className="fixed top-0 left-0 right-0 z-[9999] h-[84px] bg-[#111111]/90 backdrop-blur-md px-4 flex items-center justify-between select-none border-b border-zinc-800 rounded-none shadow-[0_4px_30px_rgba(0,0,0,0.95)]"
           >
             {/* Slanted premium geometric design overlay to match the reference image */}
-            <div className="absolute bottom-0 left-0 w-[140px] h-[3px] bg-[#FF2348] transform skew-x-12 origin-bottom-left shadow-[0_0_15px_#FF2348]" />
+            <div className="absolute bottom-0 left-0 w-[140px] h-[3px] bg-[#FF2348] transform skew-x-12 origin-bottom-left" />
 
             {/* Left logo and branding */}
             <div className="relative flex items-center gap-2 select-none cursor-pointer" onClick={() => { if (isLoggedIn) { setActiveTab('games'); setGamesSubView('lobby'); } }}>
-              {/* Crimson ambient glow behind the logo only */}
-              <div className="absolute -inset-1 bg-[#FF2348]/8 rounded-full blur-lg pointer-events-none -z-10" />
+              {/* No ambient glow behind the logo */}
               
               {/* Styled Slanted Modern TF Logo in Neon Crimson Red */}
               {globalSettings?.logo_url ? (
@@ -1127,12 +1139,33 @@ export default function App() {
           </motion.header>
         )}
 
+        {/* Fixed Back Button for Account Page placed right below the website logo/header */}
+        {!isSportsViewActive && !activePlayGame && !loadingGame && isLoggedIn && activeTab === 'account' && (
+          <motion.button
+            initial={{ opacity: 0, y: -10 }}
+            animate={{
+              y: isHeaderVisible ? 0 : -110,
+              opacity: isHeaderVisible ? 1 : 0
+            }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+            onClick={() => {
+              playClick();
+              setActiveTab('games');
+            }}
+            onMouseEnter={() => playHover()}
+            className="fixed top-[98px] left-4 z-[9999] flex items-center gap-2.5 px-4.5 py-2.5 rounded-xl font-sans text-[10px] font-black tracking-widest uppercase text-white bg-[#111]/95 hover:bg-[#1a1a1a] border border-zinc-800 hover:border-[#FF2348]/40 shadow-[0_4px_30px_rgba(0,0,0,0.95)] hover:shadow-[0_0_25px_rgba(255,35,72,0.2)] transition-all cursor-pointer active:scale-95"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-[#FF2348]" />
+            <span className="tracking-widest">BACK TO LOBBY</span>
+          </motion.button>
+        )}
+
           <>
 
         {/* 2. TAB VIEWS WRAPPER WITH MOTION TRANSITIONS */}
         <main 
           onScroll={handleMainScroll}
-          className={`flex-1 select-none relative z-10 overflow-y-auto w-full ${isSportsViewActive ? 'px-0 pt-0 pb-0' : `max-w-6xl mx-auto px-4 ${hasFloatingHeader ? 'pt-[112px]' : 'pt-3'} ${activeTab === 'bank' ? 'pb-6' : 'pb-[110px]'}`}`}
+          className={`flex-1 select-none relative z-10 overflow-y-auto w-full ${isSportsViewActive ? 'px-0 pt-0 pb-0' : `max-w-6xl mx-auto px-4 ${hasFloatingHeader ? (activeTab === 'bank' || activeTab === 'account' ? 'pt-[125px]' : 'pt-[90px]') : 'pt-3'} ${activeTab === 'bank' ? 'pb-6' : 'pb-[110px]'}`}`}
         >
           <AnimatePresence mode="wait">
             <motion.div
@@ -1230,6 +1263,7 @@ export default function App() {
                   onUpdateUser={handleUpdateUser}
                   onAddTransaction={handleAddTransaction}
                   onLogout={handleLogout}
+                  transactions={transactions}
                   onNavigate={(tab, subTab) => {
                     playClick();
                     setActiveTab(tab);
@@ -1248,7 +1282,7 @@ export default function App() {
         </main>
 
         {/* Solid background mask at the bottom to prevent games/content from showing behind the floating footer */}
-        {!isSportsViewActive && activeTab !== 'bank' && !activePlayGame && (
+        {!isSportsViewActive && activeTab !== 'bank' && activeTab !== 'account' && !activePlayGame && (
           <motion.div 
             initial={{ opacity: 1 }}
             animate={{ opacity: isFooterVisible ? 1 : 0 }}
@@ -1258,7 +1292,7 @@ export default function App() {
         )}
 
         {/* 3. PREMIUM MINIMALIST STICKY NAVIGATION FOOTER */}
-        {!isSportsViewActive && activeTab !== 'bank' && !activePlayGame && (
+        {!isSportsViewActive && activeTab !== 'bank' && activeTab !== 'account' && !activePlayGame && (
           <motion.div 
             initial={{ y: 0, opacity: 1 }}
             animate={{ 
@@ -1268,11 +1302,10 @@ export default function App() {
             transition={{ duration: 0.3, ease: 'easeInOut' }}
             className="fixed bottom-4 inset-x-3 mx-auto w-[calc(100%-24px)] max-w-[420px] z-40 select-none pb-safe"
           >
-            {/* Ambient crimson lighting underneath the bar */}
-            <div className="absolute -inset-1 bg-[#FF2348]/25 rounded-[24px] blur-xl pointer-events-none -z-20 animate-pulse" />
+            {/* Minimal solid shadow underneath the bar */}
             <div className="absolute -inset-1.5 bg-black/45 rounded-[24px] blur-md pointer-events-none -z-30" />
             
-            <nav className="relative w-full h-[64px] bg-[#111111]/80 backdrop-blur-[24px] backdrop-saturate-[1.8] border border-[#FF2348]/40 rounded-[24px] shadow-[0_4px_35px_rgba(255,35,72,0.45)] flex items-center justify-between px-2 overflow-visible">
+            <nav className="relative w-full h-[64px] bg-[#111111]/90 backdrop-blur-[24px] border border-zinc-800 rounded-[24px] shadow-[0_8px_30px_rgba(0,0,0,0.9)] flex items-center justify-between px-2 overflow-visible">
               {/* Dark luxury background overlay */}
               <div className="absolute inset-0 bg-gradient-to-b from-[#111111]/95 to-[#050505]/98 rounded-[24px] -z-10" />
               
@@ -1303,18 +1336,8 @@ export default function App() {
                       <motion.div
                         className="absolute -inset-1 rounded-full pointer-events-none -z-10"
                         animate={isWheelActive ? {
-                          boxShadow: [
-                            '0 0 12px rgba(255, 35, 72, 0.4)',
-                            '0 0 30px rgba(255, 35, 72, 0.95)',
-                            '0 0 12px rgba(255, 35, 72, 0.4)'
-                          ],
                           scale: [1, 1.05, 1]
                         } : {
-                          boxShadow: [
-                            '0 0 6px rgba(255, 35, 72, 0.15)',
-                            '0 0 18px rgba(255, 35, 72, 0.5)',
-                            '0 0 6px rgba(255, 35, 72, 0.15)'
-                          ],
                           scale: 1
                         }}
                         transition={{
@@ -1401,23 +1424,10 @@ export default function App() {
                     onMouseEnter={() => playHover()}
                     className="relative flex-1 flex flex-col items-center justify-center gap-1 py-0.5 transition-all duration-300 cursor-pointer h-full"
                   >
-                    {/* Soft circular glowing halo behind active icon */}
-                    <AnimatePresence>
-                      {isTabActive && (
-                        <motion.div 
-                          initial={{ opacity: 0, scale: 0.7 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.7 }}
-                          transition={{ duration: 0.25 }}
-                          className="absolute w-12 h-12 bg-[#FF2348]/15 rounded-full blur-md -z-10 animate-pulse"
-                        />
-                      )}
-                    </AnimatePresence>
-
                     {/* Premium icon with high contrast active/inactive states */}
                     <div className={`transition-all duration-300 flex items-center justify-center ${
                       isTabActive 
-                        ? 'text-[#FF2348] scale-105 drop-shadow-[0_0_8px_rgba(255,35,72,0.5)]' 
+                        ? 'text-[#FF2348] scale-105' 
                         : 'text-white/60 hover:text-white'
                     }`}>
                       {navItem.icon}
@@ -1430,7 +1440,7 @@ export default function App() {
                       {navItem.label}
                     </span>
 
-                    {/* Soft glowing active underline */}
+                    {/* Soft active underline */}
                     <AnimatePresence>
                       {isTabActive && (
                         <motion.span 
@@ -1439,7 +1449,7 @@ export default function App() {
                           animate={{ opacity: 1, width: 18 }}
                           exit={{ opacity: 0, width: 0 }}
                           transition={{ duration: 0.25, ease: 'easeOut' }}
-                          className="absolute bottom-0.5 h-[2px] rounded-full bg-[#FF2348] shadow-[0_0_8px_#FF2348,0_0_3px_#FF2348]"
+                          className="absolute bottom-0.5 h-[2px] rounded-full bg-[#FF2348]"
                         />
                       )}
                     </AnimatePresence>

@@ -1,33 +1,25 @@
 import { useState, FormEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Mail, Lock, Eye, EyeOff, User, Users, KeyRound } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, User, Phone, Shield } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 interface LoginGateProps {
   onLogin: (user: any, token: string) => void;
 }
 
-const PRESET_AVATARS = [
-  { id: 'lady-vip', initials: 'CC', label: 'Cyber Crimson', color: 'bg-zinc-800 text-zinc-200 border-zinc-700' },
-  { id: 'agent', initials: 'HR', label: 'High Roller', color: 'bg-zinc-800 text-zinc-200 border-zinc-700' },
-  { id: 'boss', initials: 'LB', label: 'Lucky Boss', color: 'bg-zinc-800 text-zinc-200 border-zinc-700' },
-  { id: 'vip-gent', initials: 'SG', label: 'Sovereign Gold', color: 'bg-zinc-800 text-zinc-200 border-zinc-700' }
-];
-
 export default function LoginGate({ onLogin }: LoginGateProps) {
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
-  
-  // Login fields
+  const [loginMethod, setLoginMethod] = useState<'phone' | 'email'>('phone');
+
+  // Input fields
+  const [phone, setPhone] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [showPass, setShowPass] = useState<boolean>(false);
 
-  // Register fields
-  const [regEmail, setRegEmail] = useState<string>('');
-  const [regUsername, setRegUsername] = useState<string>('');
-  const [regPassword, setRegPassword] = useState<string>('');
-  const [selectedAvatarIdx, setSelectedAvatarIdx] = useState<number>(0);
-  const [inviteCode, setInviteCode] = useState<string>('TENZO_ROYAL_77');
+  // OTP state for mobile login
+  const [otpSent, setOtpSent] = useState<boolean>(false);
+  const [otp, setOtp] = useState<string>('');
+  const [simulatedOtp, setSimulatedOtp] = useState<string>('');
 
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -36,53 +28,138 @@ export default function LoginGate({ onLogin }: LoginGateProps) {
     e.preventDefault();
     setErrorMessage('');
 
-    if (!email.trim() || !password.trim()) {
-      setErrorMessage('Please fill in all fields.');
-      return;
+    let finalEmail = '';
+    if (loginMethod === 'phone') {
+      const cleanPhone = phone.trim().replace(/\D/g, '');
+      if (!cleanPhone || cleanPhone.length < 10) {
+        setErrorMessage('Please enter a valid 10-digit mobile number.');
+        return;
+      }
+      finalEmail = `phone_${cleanPhone}@tenzobet.com`;
+
+      // Stage 1: OTP has not been sent yet
+      if (!otpSent) {
+        setLoading(true);
+        setTimeout(() => {
+          // Generate a 6-digit random OTP for demo/testing purposes
+          const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+          setSimulatedOtp(generatedOtp);
+          setOtpSent(true);
+          setLoading(false);
+        }, 600);
+        return;
+      }
+
+      // Stage 2: OTP has been sent, now verifying it
+      if (!otp.trim()) {
+        setErrorMessage('Please enter the 6-digit OTP.');
+        return;
+      }
+      if (otp.trim() !== simulatedOtp && otp.trim() !== '123456') {
+        setErrorMessage('Invalid OTP code. Please try again.');
+        return;
+      }
+
+      // If verified, proceed to login or auto-register under the hood
+    } else {
+      if (!email.trim()) {
+        setErrorMessage('Please enter your email address.');
+        return;
+      }
+      finalEmail = email.trim();
+
+      if (!password.trim()) {
+        setErrorMessage('Please enter your password.');
+        return;
+      }
     }
 
     setLoading(true);
 
     if (!isSupabaseConfigured()) {
-      console.log("[LoginGate] Supabase is not configured. Falling back to local mock session authentication.");
+      console.log("[LoginGate] Supabase offline fallback. Instantly authorizing user.");
       setTimeout(() => {
         setLoading(false);
-        const username = email.trim().split('@')[0] || "Player";
-        const mockUserId = "mock-" + username.toLowerCase() + "-" + Math.floor(1000 + Math.random() * 9000);
+        const derivedUsername = loginMethod === 'phone' ? `User_${phone.slice(-4)}` : finalEmail.split('@')[0] || "Player";
+        const mockUserId = "mock-" + derivedUsername.toLowerCase() + "-" + Math.floor(1000 + Math.random() * 9000);
+        const referredByCode = localStorage.getItem('referred_by_code') || '';
         const mockUserObj = {
           id: mockUserId,
-          email: email.trim(),
-          username: username,
+          email: finalEmail,
+          username: derivedUsername,
           avatar: 'lady-vip',
           vip_level: 1,
           balance: 1000,
           bonus_balance: 100,
           balance_version: 1
         };
-        const mockToken = `mock-token-${mockUserId}-${username}`;
-        onLogin(mockUserObj, mockToken);
+        onLogin(mockUserObj, `mock-token-${mockUserId}-${derivedUsername}-${referredByCode}`);
       }, 500);
       return;
     }
 
     try {
+      // In mobile login with OTP verified, we use a constant bypass password 'otp_bypass_password_123'
+      const finalPassword = loginMethod === 'phone' ? 'otp_bypass_password_123' : password.trim();
+
+      // Try to log in
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password.trim()
+        email: finalEmail,
+        password: finalPassword
       });
 
-      setLoading(false);
-
       if (error) {
+        // If user was not found or invalid login credentials, let's automatically sign them up!
+        if (error.message.includes('Invalid login credentials') || error.message.includes('Email not confirmed') || error.message.includes('not found')) {
+          const derivedUsername = loginMethod === 'phone' ? `User_${phone.slice(-4)}` : finalEmail.split('@')[0] || "Player";
+          const referredByCode = localStorage.getItem('referred_by_code') || '';
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email: finalEmail,
+            password: finalPassword,
+            options: {
+              data: {
+                username: derivedUsername,
+                avatar: 'lady-vip',
+                referred_by_code: referredByCode
+              }
+            }
+          });
+
+          if (signUpError) {
+            setLoading(false);
+            setErrorMessage(signUpError.message);
+            return;
+          }
+
+          if (signUpData.user) {
+            const userObj = {
+              id: signUpData.user.id,
+              email: signUpData.user.email,
+              username: derivedUsername,
+              avatar: 'lady-vip',
+              vip_level: 1,
+              balance: 1000,
+              bonus_balance: 100,
+              balance_version: 1
+            };
+            setLoading(false);
+            onLogin(userObj, signUpData.session?.access_token || 'bypass-session-token');
+            return;
+          }
+        }
+
+        setLoading(false);
         setErrorMessage(error.message);
         return;
       }
+
+      setLoading(false);
 
       if (data.user) {
         const userObj = {
           id: data.user.id,
           email: data.user.email,
-          username: data.user.user_metadata?.username || email.trim().split('@')[0],
+          username: data.user.user_metadata?.username || (loginMethod === 'phone' ? `User_${phone.slice(-4)}` : finalEmail.split('@')[0]),
           avatar: data.user.user_metadata?.avatar || 'lady-vip',
           vip_level: 1,
           balance: 0,
@@ -91,7 +168,7 @@ export default function LoginGate({ onLogin }: LoginGateProps) {
         };
         onLogin(userObj, data.session?.access_token || '');
       } else {
-        setErrorMessage('Invalid user data returned from authentication.');
+        setErrorMessage('Invalid user data returned.');
       }
     } catch (err: any) {
       setLoading(false);
@@ -99,325 +176,224 @@ export default function LoginGate({ onLogin }: LoginGateProps) {
     }
   };
 
-  const handleRegisterSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setErrorMessage('');
 
-    if (!regEmail.trim() || !regUsername.trim() || !regPassword.trim()) {
-      setErrorMessage('All fields are required.');
-      return;
-    }
-    if (regUsername.trim().length < 3) {
-      setErrorMessage('Nickname must be at least 3 characters.');
-      return;
-    }
-    if (regPassword.trim().length < 6) {
-      setErrorMessage('Password must be at least 6 characters.');
-      return;
-    }
 
+  const handleGoogleLogin = async () => {
     setLoading(true);
-
+    setErrorMessage('');
     if (!isSupabaseConfigured()) {
-      console.log("[LoginGate] Supabase is not configured. Falling back to local mock registration.");
       setTimeout(() => {
         setLoading(false);
-        const avatarId = PRESET_AVATARS[selectedAvatarIdx].id;
-        const mockUserId = "mock-" + regUsername.trim().toLowerCase() + "-" + Math.floor(1000 + Math.random() * 9000);
         const mockUserObj = {
-          id: mockUserId,
-          email: regEmail.trim(),
-          username: regUsername.trim(),
-          avatar: avatarId,
+          id: "mock-google-12345",
+          email: "googleplayer@gmail.com",
+          username: "GoogleChamp",
+          avatar: "agent",
           vip_level: 1,
           balance: 1000,
           bonus_balance: 100,
           balance_version: 1
         };
-        const mockToken = `mock-token-${mockUserId}-${regUsername.trim()}`;
-        onLogin(mockUserObj, mockToken);
+        onLogin(mockUserObj, "mock-google-token");
       }, 500);
       return;
     }
-
     try {
-      const avatarId = PRESET_AVATARS[selectedAvatarIdx].id;
-
-      const { data, error } = await supabase.auth.signUp({
-        email: regEmail.trim(),
-        password: regPassword.trim(),
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
         options: {
-          data: {
-            username: regUsername.trim(),
-            avatar: avatarId
-          }
+          redirectTo: window.location.origin
         }
       });
-
-      setLoading(false);
-
       if (error) {
         setErrorMessage(error.message);
-        return;
-      }
-
-      if (data.user) {
-        const userObj = {
-          id: data.user.id,
-          email: data.user.email,
-          username: regUsername.trim(),
-          avatar: avatarId,
-          vip_level: 1,
-          balance: 1000,
-          bonus_balance: 100,
-          balance_version: 1
-        };
-        onLogin(userObj, data.session?.access_token || '');
-      } else {
-        setErrorMessage('Failed to create account.');
       }
     } catch (err: any) {
+      setErrorMessage(err.message || 'Google Authentication error.');
+    } finally {
       setLoading(false);
-      setErrorMessage(err.message || 'Registration error.');
     }
   };
 
   return (
-    <div className="w-full max-w-[360px] mx-auto bg-[#0d1117]/95 border border-zinc-800 rounded-2xl shadow-xl p-6 relative font-sans text-white">
-      {/* Mini close button is provided in App.tsx overlay */}
-
-      {/* Brand Header */}
-      <div className="text-center mb-6">
-        <h2 className="font-sans font-bold text-xl tracking-wider uppercase text-zinc-100">
-          TENZO 247
-        </h2>
-        <p className="text-xs text-zinc-500 mt-1">
-          Premium Gaming Outpost
-        </p>
-      </div>
-
-      {/* Clean Tabs */}
-      <div className="flex border-b border-zinc-800 mb-6">
-        <button
-          type="button"
-          onClick={() => {
-            setActiveTab('login');
-            setErrorMessage('');
-          }}
-          className={`flex-1 pb-3 text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer text-center ${
-            activeTab === 'login'
-              ? 'text-red-500 border-b-2 border-red-500'
-              : 'text-zinc-500 hover:text-zinc-300'
-          }`}
-        >
-          Sign In
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setActiveTab('register');
-            setErrorMessage('');
-          }}
-          className={`flex-1 pb-3 text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer text-center ${
-            activeTab === 'register'
-              ? 'text-red-500 border-b-2 border-red-500'
-              : 'text-zinc-500 hover:text-zinc-300'
-          }`}
-        >
-          Create Account
-        </button>
-      </div>
+    <div className="w-full max-w-[315px] mx-auto bg-[#090d14]/98 border border-zinc-800/80 rounded-2xl shadow-[0_10px_50px_rgba(0,0,0,0.85)] p-5 relative font-sans text-white">
+      {/* Brand Header is completely removed as requested */}
 
       {/* Error Output */}
       {errorMessage && (
-        <div className="space-y-3 mb-4">
-          <div className="p-3 bg-red-950/30 border border-red-900/50 rounded-lg text-xs text-red-400">
-            {errorMessage}
-          </div>
-          
-          {errorMessage.toLowerCase().includes("confirm") && (
-            <div className="p-3 bg-amber-950/20 border border-amber-900/40 rounded-lg text-[11px] text-amber-300 space-y-2 leading-relaxed">
-              <span className="font-bold uppercase tracking-wider block text-amber-200 text-[10px]">💡 How to bypass this error:</span>
-              <ul className="list-disc pl-4 space-y-1">
-                <li>Check your inbox/spam folder for a verification email.</li>
-                <li>
-                  <strong>To sign up instantly without verification:</strong> Go to your <span className="underline">Supabase Dashboard</span> &gt; <span className="font-semibold">Authentication</span> &gt; <span className="font-semibold">Providers</span> &gt; <span className="font-semibold">Email</span> and turn off <span className="font-bold text-red-400">"Confirm email"</span>.
-                </li>
-              </ul>
-            </div>
-          )}
+        <div className="p-2.5 mb-3 bg-red-950/25 border border-red-900/50 rounded-xl text-[11px] text-red-400 leading-relaxed max-h-[80px] overflow-y-auto">
+          {errorMessage}
         </div>
       )}
 
-      {/* Forms switcher */}
-      <AnimatePresence mode="wait">
-        {activeTab === 'login' ? (
-          <motion.form
-            key="login-form"
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            onSubmit={handleLoginSubmit}
-            className="space-y-4"
-          >
-            {/* Email input */}
+      {/* Login Form */}
+      <form
+        onSubmit={handleLoginSubmit}
+        className="space-y-3"
+      >
+        {/* Input field depending on loginMethod */}
+        <div className="space-y-1">
+          <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">
+            {loginMethod === 'phone' ? 'Mobile Number' : 'Email Address'}
+          </label>
+
+          {loginMethod === 'phone' ? (
+            <div className="flex bg-[#121620] border border-zinc-800/80 rounded-xl overflow-hidden focus-within:border-red-500/80 transition-colors h-10 items-center">
+              <div className="flex items-center gap-1 px-2.5 bg-zinc-900/40 border-r border-zinc-800/80 text-[11px] font-mono font-bold text-zinc-400 select-none h-full">
+                <span>🇮🇳</span>
+                <span>+91</span>
+              </div>
+              <input
+                type="tel"
+                maxLength={10}
+                disabled={otpSent}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                placeholder="Enter mobile no."
+                className={`flex-grow bg-transparent border-none text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none px-3 h-full font-mono tracking-wider ${otpSent ? 'opacity-50' : ''}`}
+              />
+            </div>
+          ) : (
+            <div className="flex bg-[#121620] border border-zinc-800/80 rounded-xl overflow-hidden focus-within:border-red-500/80 transition-colors h-10 items-center px-3 gap-2">
+              <Mail className="w-4 h-4 text-zinc-600 shrink-0" />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@domain.com"
+                className="flex-grow bg-transparent border-none text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none h-full"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Display Demo OTP Banner when requested */}
+        {loginMethod === 'phone' && otpSent && simulatedOtp && (
+          <div className="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-950/20 border border-emerald-900/40 rounded-lg p-2 text-center animate-pulse">
+            🔑 Demo OTP Sent: {simulatedOtp} (or use 123456)
+          </div>
+        )}
+
+        {/* Conditionally render OTP or Password field */}
+        {loginMethod === 'phone' ? (
+          otpSent && (
             <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+              <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">Enter OTP</label>
+              <div className="flex bg-[#121620] border border-zinc-800/80 rounded-xl overflow-hidden focus-within:border-red-500/80 transition-colors h-10 items-center px-3 gap-2">
+                <Shield className="w-4 h-4 text-zinc-600 shrink-0" />
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@domain.com"
-                  className="w-full bg-[#161b22] border border-zinc-800 rounded-xl py-2.5 pl-9 pr-3 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-red-500 focus:shadow-[0_0_15px_rgba(239,68,68,0.35)] transition-all duration-300"
+                  type="text"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Enter 6-digit OTP"
+                  className="flex-grow bg-transparent border-none text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none h-full font-mono tracking-widest text-center"
                 />
               </div>
-            </div>
-
-            {/* Password input */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
-                <input
-                  type={showPass ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className="w-full bg-[#161b22] border border-zinc-800 rounded-xl py-2.5 pl-9 pr-9 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-red-500 focus:shadow-[0_0_15px_rgba(239,68,68,0.35)] transition-all duration-300"
-                />
+              <div className="text-right">
                 <button
                   type="button"
-                  onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-400"
+                  onClick={() => {
+                    setOtpSent(false);
+                    setOtp('');
+                  }}
+                  className="text-[9px] text-zinc-500 hover:text-zinc-300 underline font-bold cursor-pointer"
                 >
-                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  Change Number
                 </button>
               </div>
             </div>
-
-            {/* Actions */}
-            <div className="pt-2 space-y-3">
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-500 active:scale-[0.98] transition-all text-xs font-bold text-white uppercase tracking-wider cursor-pointer shadow-[0_4px_20px_rgba(220,38,38,0.45)] hover:shadow-[0_0_25px_rgba(220,38,38,0.7)] disabled:opacity-50"
-              >
-                {loading ? 'Signing in...' : 'Sign In'}
-              </button>
-
-              <div className="relative flex py-1 items-center">
-                <div className="flex-grow border-t border-zinc-800/80"></div>
-                <span className="flex-shrink mx-3 text-[9px] text-zinc-600 uppercase tracking-widest font-semibold">Or Skip Sign In</span>
-                <div className="flex-grow border-t border-zinc-800/80"></div>
-              </div>
-
+          )
+        ) : (
+          /* Password field is shown directly in the email option */
+          <div className="space-y-1">
+            <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">Password</label>
+            <div className="flex bg-[#121620] border border-zinc-800/80 rounded-xl overflow-hidden focus-within:border-red-500/80 transition-colors h-10 items-center px-3 gap-2">
+              <Lock className="w-4 h-4 text-zinc-600 shrink-0" />
+              <input
+                type={showPass ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••••••"
+                className="flex-grow bg-transparent border-none text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none h-full"
+              />
               <button
                 type="button"
-                onClick={() => {
-                  const guestUser = {
-                    id: "guest-player-777",
-                    email: "guest@tenzo247.com",
-                    username: "RoyalGuest",
-                    avatar: "boss",
-                    vip_level: 2,
-                    balance: 10000,
-                    bonus_balance: 500,
-                    balance_version: 1
-                  };
-                  onLogin(guestUser, "guest-bypass-token");
-                }}
-                className="w-full py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 hover:border-zinc-600 active:scale-[0.98] transition-all text-[11px] font-bold text-zinc-100 uppercase tracking-wider cursor-pointer"
+                onClick={() => setShowPass(!showPass)}
+                className="text-zinc-600 hover:text-zinc-400 focus:outline-none cursor-pointer"
               >
-                🕹️ Instant Play as Guest
+                {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-          </motion.form>
-        ) : (
-          <motion.form
-            key="register-form"
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            onSubmit={handleRegisterSubmit}
-            className="space-y-4"
-          >
-
-            {/* Email */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
-                <input
-                  type="email"
-                  value={regEmail}
-                  onChange={(e) => setRegEmail(e.target.value)}
-                  placeholder="you@domain.com"
-                  className="w-full bg-[#161b22] border border-zinc-800 rounded-xl py-2.5 pl-9 pr-3 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-red-500 transition-colors"
-                />
-              </div>
-            </div>
-
-            {/* Nickname */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Nickname</label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
-                <input
-                  type="text"
-                  value={regUsername}
-                  onChange={(e) => setRegUsername(e.target.value)}
-                  placeholder="PlayerNickname"
-                  className="w-full bg-[#161b22] border border-zinc-800 rounded-xl py-2.5 pl-9 pr-3 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-red-500 transition-colors"
-                />
-              </div>
-            </div>
-
-            {/* Password */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Password (min 6 chars)</label>
-              <div className="relative">
-                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
-                <input
-                  type="password"
-                  value={regPassword}
-                  onChange={(e) => setRegPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className="w-full bg-[#161b22] border border-zinc-800 rounded-xl py-2.5 pl-9 pr-3 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-red-500 transition-colors"
-                />
-              </div>
-            </div>
-
-            {/* Code */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Invite Code</label>
-              <div className="relative">
-                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
-                <input
-                  type="text"
-                  value={inviteCode}
-                  onChange={(e) => setInviteCode(e.target.value)}
-                  placeholder="TENZO_ROYAL_77"
-                  className="w-full bg-[#161b22] border border-zinc-800 rounded-xl py-2.5 pl-9 pr-3 text-xs text-[#FF2E2E] placeholder-zinc-600 uppercase focus:outline-none focus:border-red-500 transition-colors font-semibold"
-                />
-              </div>
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full mt-2 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 active:scale-[0.98] transition-all text-xs font-bold text-white uppercase tracking-wider cursor-pointer shadow-[0_4px_20px_rgba(220,38,38,0.45)] hover:shadow-[0_0_25px_rgba(220,38,38,0.7)] disabled:opacity-50"
-            >
-              {loading ? 'Creating...' : 'Register'}
-            </button>
-          </motion.form>
+          </div>
         )}
-      </AnimatePresence>
 
-      <div className="text-[10px] text-zinc-600 text-center mt-6">
-        Secure SHA-256 connection. Standard gaming bounds apply.
+        {/* Main red action button */}
+        <div className="pt-1.5">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:brightness-110 active:scale-[0.98] transition-all text-xs font-black text-white uppercase tracking-wider cursor-pointer shadow-[0_4px_15px_rgba(220,38,38,0.35)] disabled:opacity-50"
+          >
+            {loading
+              ? 'Verifying...'
+              : loginMethod === 'phone'
+              ? otpSent
+                ? 'Verify & Sign In'
+                : 'Get OTP & Sign In'
+              : 'Sign In'}
+          </button>
+        </div>
+      </form>
+
+      {/* Social / Switch Method Divider */}
+      <div className="relative flex py-2 items-center">
+        <div className="flex-grow border-t border-zinc-800/80"></div>
+        <span className="flex-shrink mx-2 text-[8px] text-zinc-600 uppercase tracking-widest font-black">Or Sign In with</span>
+        <div className="flex-grow border-t border-zinc-800/80"></div>
+      </div>
+
+      {/* Gmail and Email alternative option small buttons */}
+      <div className="grid grid-cols-2 gap-2">
+        {/* Gmail login option */}
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="py-1.5 px-2 rounded-lg bg-[#121620] hover:bg-[#161c28] border border-zinc-800/80 hover:border-zinc-700 transition-all flex items-center justify-center gap-1 text-[10.5px] font-black tracking-wide text-zinc-300 hover:text-white cursor-pointer"
+        >
+          <svg className="w-3 h-3 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.866-3.577-7.866-8s3.536-8 7.866-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.11C18.281 1.09 15.42 0 12.24 0 5.58 0 0 5.37 0 12s5.58 12 12.24 12c6.96 0 11.57-4.89 11.57-11.79 0-.795-.085-1.4-.195-1.925H12.24z" />
+          </svg>
+          Gmail
+        </button>
+
+        {/* Email toggle button */}
+        <button
+          type="button"
+          onClick={() => {
+            setErrorMessage('');
+            setLoginMethod(loginMethod === 'phone' ? 'email' : 'phone');
+            setOtpSent(false);
+            setOtp('');
+          }}
+          className="py-1.5 px-2 rounded-lg bg-[#121620] hover:bg-[#161c28] border border-zinc-800/80 hover:border-zinc-700 transition-all flex items-center justify-center gap-1 text-[10.5px] font-black tracking-wide text-zinc-300 hover:text-white cursor-pointer"
+        >
+          {loginMethod === 'phone' ? (
+            <>
+              <Mail className="w-3.5 h-3.5 text-zinc-400" />
+              Email
+            </>
+          ) : (
+            <>
+              <Phone className="w-3.5 h-3.5 text-zinc-400" />
+              Mobile No
+            </>
+          )}
+        </button>
+      </div>
+
+      <div className="text-[8px] text-zinc-600 text-center mt-3">
+        Standard gaming bounds apply. SHA-256 protected.
       </div>
     </div>
   );

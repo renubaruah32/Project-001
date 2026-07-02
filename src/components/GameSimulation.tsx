@@ -9,6 +9,9 @@ import {
 import { playClick, playHover, playWin, startGameMusic, stopGameMusic } from '../utils/audio';
 import CrossfireChicken from './CrossfireChicken';
 import CasinoRoulette from './CasinoRoulette';
+import CasinoMines from './CasinoMines';
+import CasinoPlinko from './CasinoPlinko';
+import CasinoFortuneWheel from './CasinoFortuneWheel';
 
 interface GameSimulationProps {
   game: Game;
@@ -2157,7 +2160,7 @@ export default function GameSimulation({ game, user, onUpdateUser, onClose, onAd
     );
   }
 
-  if (game.id === 'chicken-road') {
+  if (game.id === 'chicken-road' || game.id === 'crossfire-chicken') {
     return (
       <div className="fixed inset-0 z-50 overflow-y-auto bg-[#000000] text-white select-none">
         <CrossfireChicken
@@ -2174,6 +2177,42 @@ export default function GameSimulation({ game, user, onUpdateUser, onClose, onAd
   if (game.id === 'roulette') {
     return (
       <CasinoRoulette
+        user={user}
+        onUpdateUser={onUpdateUser}
+        onAddTransaction={onAddTransaction}
+        onClose={onClose}
+        globalSettings={globalSettings}
+      />
+    );
+  }
+
+  if (game.id === 'mines' || game.id === 'mines-outpost') {
+    return (
+      <CasinoMines
+        user={user}
+        onUpdateUser={onUpdateUser}
+        onAddTransaction={onAddTransaction}
+        onClose={onClose}
+        globalSettings={globalSettings}
+      />
+    );
+  }
+
+  if (game.id === 'plinko' || game.id === 'plinko-strike') {
+    return (
+      <CasinoPlinko
+        user={user}
+        onUpdateUser={onUpdateUser}
+        onAddTransaction={onAddTransaction}
+        onClose={onClose}
+        globalSettings={globalSettings}
+      />
+    );
+  }
+
+  if (game.id === 'fortune-wheel' || game.id === 'neon-wheel') {
+    return (
+      <CasinoFortuneWheel
         user={user}
         onUpdateUser={onUpdateUser}
         onAddTransaction={onAddTransaction}

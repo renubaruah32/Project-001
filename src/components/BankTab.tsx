@@ -2035,7 +2035,7 @@ export default function BankTab({
                     {upiAccounts.length > 0 ? (
                       (() => {
                         const acc = upiAccounts[0];
-                        const lowerUpi = acc.upiId.toLowerCase();
+                        const lowerUpi = (acc?.upiId || '').toLowerCase();
                         const isPaytm = lowerUpi.includes('paytm');
                         const isYbl = lowerUpi.includes('ybl');
 
@@ -2582,7 +2582,8 @@ export default function BankTab({
                 <div className="space-y-2 max-h-[220px] overflow-y-auto pr-0.5">
                   {filteredTransactions.map((log) => {
                     const isDeposit = log.type === 'deposit';
-                    const isUpiTx = log.description.toLowerCase().includes('upi') || log.description.toLowerCase().includes('gpay') || log.description.toLowerCase().includes('vpa');
+                    const desc = (log.description || '').toLowerCase();
+                    const isUpiTx = desc.includes('upi') || desc.includes('gpay') || desc.includes('vpa');
                     return (
                       <div
                         key={log.id}

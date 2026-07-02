@@ -642,7 +642,41 @@ export default function App() {
             setGlobalSettings(data.db.global_settings);
           }
           if (data.db.games) {
-            setGames(data.db.games);
+            const mappedDbGames = data.db.games.map((g: any) => ({
+              ...g,
+              id: g.slug || g.id,
+              name: g.game_name || g.name || '',
+              category: g.category || 'slots',
+              image: g.icon_url || g.banner_url || g.thumbnail_url || g.image || '',
+              rtp: parseFloat(g.rtp_percentage || g.rtp || '97'),
+              livePlayers: g.live_players || g.livePlayers || 2500,
+              featured: g.is_featured ?? g.featured ?? false,
+            }));
+
+            const dbGamesMap = new Map<string, any>(mappedDbGames.map((g: any) => [g.id, g]));
+
+            const mergedGames = INITIAL_GAMES.map((initGame) => {
+              const dbGame = dbGamesMap.get(initGame.id);
+              if (dbGame) {
+                return {
+                  ...initGame,
+                  ...dbGame,
+                  id: initGame.id,
+                  name: dbGame.name || initGame.name,
+                  rtp: dbGame.rtp || initGame.rtp,
+                };
+              }
+              return initGame;
+            });
+
+            const initGameIds = new Set(INITIAL_GAMES.map(g => g.id));
+            for (const dbGame of mappedDbGames) {
+              if (!initGameIds.has(dbGame.id)) {
+                mergedGames.push(dbGame);
+              }
+            }
+
+            setGames(mergedGames);
           }
           if (data.db.hero_images) {
             setHeroImages(data.db.hero_images);
@@ -737,7 +771,7 @@ export default function App() {
               }
             }
           } catch (sbErr) {
-            console.error("Direct Supabase query fallback failed:", sbErr);
+            console.warn("Direct Supabase query fallback failed:", sbErr);
           }
           setUser((prev) => {
             if (prev.isBalanceLoading) {
@@ -846,7 +880,7 @@ export default function App() {
               balance: newWalletBalance,
               bonus_balance: newBonusBalance,
               balance_version: nextVer
-            }).eq('id', authUser.id).then();
+            }).eq('id', authUser.id).then().catch((e: any) => console.warn("Supabase wallet update skipped/failed:", e));
           }
         }).catch(() => {});
       }
@@ -1139,8 +1173,8 @@ export default function App() {
           </motion.header>
         )}
 
-        {/* Fixed Back Button for Account Page placed right below the website logo/header */}
-        {!isSportsViewActive && !activePlayGame && !loadingGame && isLoggedIn && activeTab === 'account' && (
+        {/* Fixed Back Button for Account and Bank Page placed right below the website logo/header */}
+        {!isSportsViewActive && !activePlayGame && !loadingGame && isLoggedIn && (activeTab === 'account' || activeTab === 'bank') && (
           <motion.button
             initial={{ opacity: 0, y: -10 }}
             animate={{
@@ -1153,10 +1187,10 @@ export default function App() {
               setActiveTab('games');
             }}
             onMouseEnter={() => playHover()}
-            className="fixed top-[98px] left-4 z-[9999] flex items-center gap-2.5 px-4.5 py-2.5 rounded-xl font-sans text-[10px] font-black tracking-widest uppercase text-white bg-[#111]/95 hover:bg-[#1a1a1a] border border-zinc-800 hover:border-[#FF2348]/40 shadow-[0_4px_30px_rgba(0,0,0,0.95)] hover:shadow-[0_0_25px_rgba(255,35,72,0.2)] transition-all cursor-pointer active:scale-95"
+            className="fixed top-[94px] left-4 z-[9999] flex items-center gap-2 px-4 py-2 rounded-full font-sans text-[11px] font-black tracking-widest uppercase text-zinc-100 hover:text-white bg-[#FF2348]/10 hover:bg-[#FF2348]/20 border border-[#FF2348]/20 hover:border-[#FF2348]/40 shadow-[0_4px_24px_rgba(0,0,0,0.85)] hover:shadow-[0_0_20px_rgba(255,35,72,0.25)] transition-all cursor-pointer active:scale-95"
           >
             <ArrowLeft className="w-3.5 h-3.5 text-[#FF2348]" />
-            <span className="tracking-widest">BACK TO LOBBY</span>
+            <span>BACK TO GAMES</span>
           </motion.button>
         )}
 
@@ -1165,7 +1199,7 @@ export default function App() {
         {/* 2. TAB VIEWS WRAPPER WITH MOTION TRANSITIONS */}
         <main 
           onScroll={handleMainScroll}
-          className={`flex-1 select-none relative z-10 overflow-y-auto w-full ${isSportsViewActive ? 'px-0 pt-0 pb-0' : `max-w-6xl mx-auto px-4 ${hasFloatingHeader ? (activeTab === 'bank' || activeTab === 'account' ? 'pt-[125px]' : 'pt-[90px]') : 'pt-3'} ${activeTab === 'bank' ? 'pb-6' : 'pb-[110px]'}`}`}
+          className={`flex-1 select-none relative z-10 overflow-y-auto w-full ${isSportsViewActive ? 'px-0 pt-0 pb-0' : `max-w-6xl mx-auto px-4 ${hasFloatingHeader ? 'pt-[90px]' : 'pt-3'} ${activeTab === 'bank' ? 'pb-6' : 'pb-[110px]'}`}`}
         >
           <AnimatePresence mode="wait">
             <motion.div

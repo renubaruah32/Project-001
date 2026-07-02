@@ -244,42 +244,42 @@ export default function LobbyTab({
 
   // Filter games based on selected filter chip
   const getFilteredGames = () => {
-    const baseGames = games.filter((g) => g.category !== 'sports');
+    const baseGames = games.filter((g) => g && g.category !== 'sports');
     
     switch (selectedCategory) {
       case 'crash':
         return baseGames.filter(g => {
-          const id = g.id.toLowerCase();
-          const name = g.name.toLowerCase();
+          const id = (g.id || '').toLowerCase();
+          const name = (g.name || '').toLowerCase();
           return id.includes('aviator') || id.includes('mine') || id.includes('plinko') || id.includes('jet') || id.includes('crash');
         });
       case 'slots':
         return baseGames.filter(g => {
-          const id = g.id.toLowerCase();
-          const name = g.name.toLowerCase();
+          const id = (g.id || '').toLowerCase();
+          const name = (g.name || '').toLowerCase();
           return id.includes('slot') || id.includes('chicken') || id.includes('fruit') || id.includes('wheel') || id.includes('fortune') || id.includes('party');
         });
       case 'table':
         return baseGames.filter(g => {
-          const id = g.id.toLowerCase();
-          const name = g.name.toLowerCase();
+          const id = (g.id || '').toLowerCase();
+          const name = (g.name || '').toLowerCase();
           return id.includes('roulette') || id.includes('patti') || id.includes('poker') || id.includes('blackjack') || id.includes('dragon') || id.includes('tiger') || id.includes('teen') || id.includes('dice');
         });
       case 'favorites':
-        return baseGames.filter(g => favorites.includes(g.id));
+        return baseGames.filter(g => g && favorites.includes(g.id));
       case 'spribe':
         return baseGames.filter(g => {
-          const id = g.id.toLowerCase();
+          const id = (g.id || '').toLowerCase();
           return id.includes('aviator') || id.includes('mine') || id.includes('plinko') || id.includes('dice');
         });
       case 'evolution':
         return baseGames.filter(g => {
-          const id = g.id.toLowerCase();
+          const id = (g.id || '').toLowerCase();
           return id.includes('roulette') || id.includes('patti') || id.includes('poker') || id.includes('blackjack') || id.includes('dragon') || id.includes('tiger') || id.includes('teen');
         });
       case 'pgsoft':
         return baseGames.filter(g => {
-          const id = g.id.toLowerCase();
+          const id = (g.id || '').toLowerCase();
           return id.includes('chicken') || id.includes('wheel') || id.includes('fortune') || id.includes('fruit') || id.includes('party');
         });
       case 'all':
@@ -462,8 +462,8 @@ export default function LobbyTab({
                   {filteredGames.map((game, idx) => {
                     // Get premium badge mappings
                     const getGameBadge = (id: string, name: string) => {
-                      const lowerId = id.toLowerCase();
-                      const lowerName = name.toLowerCase();
+                      const lowerId = (id || '').toLowerCase();
+                      const lowerName = (name || '').toLowerCase();
                       if (lowerId.includes('aviator') || lowerName.includes('aviator')) {
                         return { icon: '✈', text: 'Aviator', color: 'text-red-500' };
                       }
@@ -512,8 +512,8 @@ export default function LobbyTab({
 
                     // Helper to get fallback graphic/icon details
                     const getFallbackGraphic = (id: string, name: string) => {
-                      const lowerId = id.toLowerCase();
-                      const lowerName = name.toLowerCase();
+                      const lowerId = (id || '').toLowerCase();
+                      const lowerName = (name || '').toLowerCase();
                       if (lowerId.includes('aviator') || lowerName.includes('aviator')) {
                         return { icon: <Flame className="w-10 h-10 text-red-500 animate-pulse" />, bg: 'from-red-950/60 to-zinc-950' };
                       }

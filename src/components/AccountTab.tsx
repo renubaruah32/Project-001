@@ -82,7 +82,7 @@ export default function AccountTab({
     if (tx.type !== 'withdraw') return false;
     if (tx.status !== 'SUCCESS' && tx.status !== 'PENDING') return false;
     
-    const ts = tx.timestamp.toLowerCase();
+    const ts = (tx.timestamp || '').toLowerCase();
     if (ts.includes('yesterday')) return false;
     if (ts.includes('jun') || ts.includes('jul') || ts.includes('may')) return false;
     

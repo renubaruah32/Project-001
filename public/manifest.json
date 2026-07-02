@@ -1,0 +1,15 @@
+{
+  "short_name": "Tenzo 247",
+  "name": "Tenzo 247 - Premium Casino & Sports",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#09090B",
+  "background_color": "#09090B",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2309090B'/%3E%3Cpath d='M22 20h73l-3.5 14H54l-11.5 46H26.5L38 34H18.5l1.5-6h38l1.5-4H21l1-4z' fill='%23FF2348'/%3E%3Cpath d='M60 38h27.5l-2.5 10H68.5L60.5 80H49.5z' fill='%23FFFFFF'/%3E%3C/svg%3E",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

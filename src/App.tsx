@@ -1024,6 +1024,19 @@ export default function App() {
   const isSportsViewActive = activeTab === 'games' && gamesSubView === 'sports';
   const hasFloatingHeader = !isSportsViewActive && !activePlayGame && !loadingGame && activeTab !== 'wheel';
 
+  useEffect(() => {
+    const themeColor = isSportsViewActive ? '#FAFAFA' : '#09090B';
+    const metaTag = document.querySelector('meta[name="theme-color"]');
+    if (metaTag) {
+      metaTag.setAttribute('content', themeColor);
+    } else {
+      const newMeta = document.createElement('meta');
+      newMeta.name = 'theme-color';
+      newMeta.content = themeColor;
+      document.head.appendChild(newMeta);
+    }
+  }, [isSportsViewActive]);
+
   return (
     <div className={`h-screen w-full max-w-full overflow-hidden ${isSportsViewActive ? 'bg-[#FAFAFA] text-[#111111]' : 'bg-[#05070D] text-white'} flex flex-col items-center select-none transition-colors duration-300`}>
       {/* Container sizing redesigned to be full-screen, removing the old max-w-md mobile frame limit! */}

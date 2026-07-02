@@ -304,6 +304,23 @@ export default function App() {
   const lastScrollTopRef = useRef<number>(0);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Independent page scrolls and refresh system
+  const [refreshKeys, setRefreshKeys] = useState<Record<string, number>>({
+    lobby: 0,
+    sports: 0,
+    bank: 0,
+    wheel: 0,
+    refer: 0,
+    account: 0
+  });
+
+  const triggerRefresh = (key: string) => {
+    setRefreshKeys(prev => ({
+      ...prev,
+      [key]: (prev[key] || 0) + 1
+    }));
+  };
+
   const handleMainScroll = (e: any) => {
     // Keep header and footer always sticky and visible on scroll
     setIsHeaderVisible(true);
@@ -1005,12 +1022,12 @@ export default function App() {
   };
 
   const isSportsViewActive = activeTab === 'games' && gamesSubView === 'sports';
-  const hasFloatingHeader = !isSportsViewActive && !activePlayGame && !loadingGame;
+  const hasFloatingHeader = !isSportsViewActive && !activePlayGame && !loadingGame && activeTab !== 'wheel';
 
   return (
-    <div className={`min-h-screen w-full max-w-full overflow-x-hidden ${isSportsViewActive ? 'pb-16 bg-[#FAFAFA] text-[#111111]' : 'pb-28 bg-[#050505] text-white'} flex flex-col items-center select-none transition-colors duration-300`}>
+    <div className={`h-screen w-full max-w-full overflow-hidden ${isSportsViewActive ? 'bg-[#FAFAFA] text-[#111111]' : 'bg-[#050505] text-white'} flex flex-col items-center select-none transition-colors duration-300`}>
       {/* Container sizing redesigned to be full-screen, removing the old max-w-md mobile frame limit! */}
-      <div className={`w-full max-w-full min-h-screen overflow-x-hidden ${isSportsViewActive ? 'bg-[#FAFAFA]' : 'bg-[#050505]'} flex flex-col relative transition-colors duration-300`}>
+      <div className={`w-full max-w-full h-full overflow-hidden ${isSportsViewActive ? 'bg-[#FAFAFA]' : 'bg-[#050505]'} flex flex-col relative transition-colors duration-300`}>
         
         {/* Absolute Background Glowing Gradients */}
         {!isSportsViewActive && (
@@ -1022,7 +1039,7 @@ export default function App() {
         )}
 
         {/* 1. STICKY / FIXED VIP HEADER WITH NEW PREMIUM THEME */}
-        {!isSportsViewActive && !activePlayGame && !loadingGame && (
+        {hasFloatingHeader && (
           <motion.header
             initial={{ y: 0, opacity: 1 }}
             animate={{
@@ -1181,17 +1198,17 @@ export default function App() {
 
         {/* 2. TAB VIEWS WRAPPER WITH MOTION TRANSITIONS */}
         <main 
-          onScroll={handleMainScroll}
-          className={`flex-1 select-none relative z-10 overflow-y-auto w-full ${isSportsViewActive ? 'px-0 pt-0 pb-0' : `max-w-6xl mx-auto px-4 ${hasFloatingHeader ? (activeTab === 'games' ? 'pt-[115px]' : 'pt-[90px]') : 'pt-3'} ${activeTab === 'bank' ? 'pb-6' : 'pb-[110px]'}`}`}
+          className="flex-1 select-none relative z-10 w-full overflow-hidden flex flex-col min-h-0"
         >
           <AnimatePresence mode="wait">
             <motion.div
-              key={activeTab}
+              key={`${activeTab === 'games' ? `games-${gamesSubView}` : activeTab}-${refreshKeys[activeTab === 'games' ? gamesSubView : activeTab] || 0}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className="w-full"
+              onScroll={handleMainScroll}
+              className={`w-full flex-1 overflow-y-auto scroll-smooth ${isSportsViewActive ? 'px-0 pt-0 pb-0' : `max-w-6xl mx-auto px-4 ${hasFloatingHeader ? (activeTab === 'games' ? 'pt-[115px]' : 'pt-[90px]') : 'pt-3'} ${activeTab === 'bank' ? 'pb-6' : 'pb-[110px]'}`}`}
             >
               {activeTab === 'games' && (
                 gamesSubView === 'sports' ? (
@@ -1415,6 +1432,7 @@ export default function App() {
                             return;
                           }
                           setActiveTab('wheel');
+                          triggerRefresh('wheel');
                         }}
                         onMouseEnter={() => playHover()}
                         whileTap={{ scale: 0.90, translateY: 0.5 }}
@@ -1471,12 +1489,15 @@ export default function App() {
                       if (navItem.id === 'sports') {
                         setActiveTab('games');
                         setGamesSubView('sports');
+                        triggerRefresh('sports');
                       } else if (navItem.id === 'games') {
                         setActiveTab('games');
                         setGamesSubView('lobby');
                         setSelectedCategory('all');
+                        triggerRefresh('lobby');
                       } else {
                         setActiveTab(navItem.id as any);
+                        triggerRefresh(navItem.id);
                       }
                     }}
                     whileTap={{ scale: 0.94 }}

@@ -382,6 +382,18 @@ export default function SportsBettingSection({
           
           {/* Logo segment like CRED/Apple Wallet */}
           <div className="flex items-center gap-3">
+            {onBackToLobby && (
+              <button
+                onClick={() => {
+                  playClick();
+                  onBackToLobby();
+                }}
+                className="w-10 h-10 rounded-xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.06)] border border-[#EDEDED] flex items-center justify-center text-[#111111] hover:bg-neutral-50 active:scale-95 transition-all outline-none cursor-pointer"
+                aria-label="Back to Lobby"
+              >
+                <ArrowLeft className="w-5 h-5 text-[#111111]" />
+              </button>
+            )}
 
             <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.06)] border border-[#EDEDED]">
               <div className="relative font-sans text-xl font-black italic tracking-tighter text-[#111111] flex items-center select-none">

@@ -166,3 +166,10 @@ html, body, #root {
 html::-webkit-scrollbar, body::-webkit-scrollbar {
   display: none; /* Chrome, Safari and Opera */
 }
+
+/* Hide header on mobile devices when search input is focused to maximize screen area and prevent overlap */
+@media (max-width: 768px) {
+  body.search-active header {
+    display: none !important;
+  }
+}

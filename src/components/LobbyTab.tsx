@@ -1,7 +1,7 @@
 import { useState, useEffect, ChangeEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Game, UserProfile, Transaction } from '../types';
-import { Play, Heart, Flame, ShieldCheck, HelpCircle, Trophy, Users, Zap, ExternalLink, Activity, Lock, ArrowDownCircle, ArrowUpCircle, Wallet, Check, Clock, TrendingUp, Sparkles, Gift, Camera, Headphones, ChevronLeft, ChevronRight, Coins } from 'lucide-react';
+import { Play, Heart, Flame, ShieldCheck, HelpCircle, Trophy, Users, Zap, ExternalLink, Activity, Lock, ArrowDownCircle, ArrowUpCircle, Wallet, Check, Clock, TrendingUp, Sparkles, Gift, Camera, Headphones, ChevronLeft, ChevronRight, Coins, Search, X } from 'lucide-react';
 import { playClick, playHover, playWin } from '../utils/audio';
 
 interface LobbyTabProps {
@@ -196,7 +196,20 @@ export default function LobbyTab({
 
   // States for dynamic switcher buttons
   const [lobbySubView, setLobbySubView] = useState<'all_games' | 'sports_betting'>('all_games');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [activeSelectMatch, setActiveSelectMatch] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (isSearchFocused) {
+      document.body.classList.add('search-active');
+    } else {
+      document.body.classList.remove('search-active');
+    }
+    return () => {
+      document.body.classList.remove('search-active');
+    };
+  }, [isSearchFocused]);
   const [selectedOddType, setSelectedOddType] = useState<'team1' | 'draw' | 'team2' | null>(null);
   const [lobbyBetStake, setLobbyBetStake] = useState<string>('1000');
   const [lobbyBetPlacedMessage, setLobbyBetPlacedMessage] = useState<string | null>(null);
@@ -242,50 +255,70 @@ export default function LobbyTab({
     };
   }, [slideGames.length]);
 
-  // Filter games based on selected filter chip
+  // Filter games based on selected filter chip and search term
   const getFilteredGames = () => {
-    const baseGames = games.filter((g) => g && g.category !== 'sports');
+    let baseGames = games.filter((g) => g && g.category !== 'sports');
     
+    // 1. First filter by category
     switch (selectedCategory) {
       case 'crash':
-        return baseGames.filter(g => {
+        baseGames = baseGames.filter(g => {
           const id = (g.id || '').toLowerCase();
           const name = (g.name || '').toLowerCase();
           return id.includes('aviator') || id.includes('mine') || id.includes('plinko') || id.includes('jet') || id.includes('crash');
         });
+        break;
       case 'slots':
-        return baseGames.filter(g => {
+        baseGames = baseGames.filter(g => {
           const id = (g.id || '').toLowerCase();
           const name = (g.name || '').toLowerCase();
           return id.includes('slot') || id.includes('chicken') || id.includes('fruit') || id.includes('wheel') || id.includes('fortune') || id.includes('party');
         });
+        break;
       case 'table':
-        return baseGames.filter(g => {
+        baseGames = baseGames.filter(g => {
           const id = (g.id || '').toLowerCase();
           const name = (g.name || '').toLowerCase();
           return id.includes('roulette') || id.includes('patti') || id.includes('poker') || id.includes('blackjack') || id.includes('dragon') || id.includes('tiger') || id.includes('teen') || id.includes('dice');
         });
+        break;
       case 'favorites':
-        return baseGames.filter(g => g && favorites.includes(g.id));
+        baseGames = baseGames.filter(g => g && favorites.includes(g.id));
+        break;
       case 'spribe':
-        return baseGames.filter(g => {
+        baseGames = baseGames.filter(g => {
           const id = (g.id || '').toLowerCase();
           return id.includes('aviator') || id.includes('mine') || id.includes('plinko') || id.includes('dice');
         });
+        break;
       case 'evolution':
-        return baseGames.filter(g => {
+        baseGames = baseGames.filter(g => {
           const id = (g.id || '').toLowerCase();
           return id.includes('roulette') || id.includes('patti') || id.includes('poker') || id.includes('blackjack') || id.includes('dragon') || id.includes('tiger') || id.includes('teen');
         });
+        break;
       case 'pgsoft':
-        return baseGames.filter(g => {
+        baseGames = baseGames.filter(g => {
           const id = (g.id || '').toLowerCase();
           return id.includes('chicken') || id.includes('wheel') || id.includes('fortune') || id.includes('fruit') || id.includes('party');
         });
+        break;
       case 'all':
       default:
-        return baseGames;
+        break;
     }
+
+    // 2. Then filter by search term if provided
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase().trim();
+      baseGames = baseGames.filter(g => 
+        (g.name || '').toLowerCase().includes(term) || 
+        (g.category || '').toLowerCase().includes(term) ||
+        (g.id || '').toLowerCase().includes(term)
+      );
+    }
+
+    return baseGames;
   };
 
   const filteredGames = getFilteredGames();
@@ -361,6 +394,118 @@ export default function LobbyTab({
 
       {/* 2. DYNAMIC SEGMENTED VIEWS: CASINO VS SPORTS */}
       <section className="space-y-4 pb-2">
+
+        {/* Backdrop overlay when search is active on mobile to dim background and capture outside taps */}
+        {isSearchFocused && (
+          <div 
+            className="fixed inset-0 bg-black/85 z-[99998] backdrop-blur-[3px] md:hidden transition-all duration-300"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const inputEl = document.getElementById('lobby-search-input') as HTMLInputElement;
+              if (inputEl) inputEl.blur();
+              setIsSearchFocused(false);
+            }}
+          />
+        )}
+
+        {/* PREMIUM PERSISTENT SEARCH SECTION */}
+        <div 
+          id="lobby-search-container"
+          className={`border p-4 space-y-3 shadow-lg select-text transition-all duration-300 ${
+            isSearchFocused 
+              ? 'fixed top-2 left-2 right-2 z-[99999] bg-[#0c0c0c]/98 border-[#FF2348] shadow-[0_15px_45px_rgba(0,0,0,0.95)] rounded-2xl md:relative md:top-auto md:left-auto md:right-auto md:z-10 md:bg-[#111111]/95 md:border-zinc-800/80 md:rounded-2xl'
+              : 'relative bg-[#111111]/95 border-zinc-800/80 rounded-2xl'
+          }`}
+        >
+          {/* Search bar input container */}
+          <div className={`relative flex items-center bg-[#050505] border rounded-xl px-3 py-2.5 transition-all select-text ${
+            isSearchFocused ? 'border-[#FF2348]/80 shadow-[0_0_12px_rgba(255,35,72,0.25)]' : 'border-zinc-800'
+          }`}>
+            {isSearchFocused && (
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  playClick();
+                  const inputEl = document.getElementById('lobby-search-input') as HTMLInputElement;
+                  if (inputEl) inputEl.blur();
+                  setIsSearchFocused(false);
+                }}
+                className="mr-2 p-1.5 bg-zinc-900 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-colors cursor-pointer shrink-0 md:hidden flex items-center justify-center active:scale-95"
+              >
+                <ChevronLeft className="w-4 h-4 text-white" />
+              </button>
+            )}
+            <Search className="w-4 h-4 text-[#FF2348] shrink-0 pointer-events-none" />
+            <input
+              id="lobby-search-input"
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onFocus={(e) => {
+                setIsSearchFocused(true);
+              }}
+              onBlur={() => {
+                // Keep active long enough for button click/category select to process
+                setTimeout(() => {
+                  setIsSearchFocused(false);
+                }, 250);
+              }}
+              placeholder="Search games..."
+              className="bg-transparent text-white font-sans text-sm sm:text-base w-full ml-2.5 outline-none placeholder-zinc-500 select-text"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  playClick();
+                  setSearchTerm('');
+                }}
+                className="p-1.5 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer shrink-0"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Scrolling category list - Swipe/scrollbar symbol bar completely removed via CSS */}
+          <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] select-none flex items-center gap-1.5 py-0.5">
+            {[
+              { id: 'all', label: 'All Games', icon: '🎮' },
+              { id: 'crash', label: 'Crash Games', icon: '🚀' },
+              { id: 'slots', label: 'Slots', icon: '🎰' },
+              { id: 'table', label: 'Table Games', icon: '🎲' },
+              { id: 'favorites', label: 'My Favorites', icon: '⭐' },
+              { id: 'spribe', label: 'Spribe', icon: '⚡' },
+              { id: 'evolution', label: 'Evolution', icon: '👑' },
+              { id: 'pgsoft', label: 'PG Soft', icon: '💎' }
+            ].map((cat) => {
+              const isActive = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => {
+                    playClick();
+                    onSelectCategory(cat.id);
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-sans font-extrabold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap border select-none ${
+                    isActive
+                      ? 'bg-gradient-to-r from-[#FF2348] to-[#B4002C] border-[#FF2348]/40 text-white shadow-[0_2px_8px_rgba(255,35,72,0.35)]'
+                      : 'bg-zinc-900/60 hover:bg-zinc-800/80 border-zinc-800/80 text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <span className="text-[11px] leading-none">{cat.icon}</span>
+                  <span>{cat.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Dynamic Flash Bet placed overlay banner */}
         <AnimatePresence>
           {lobbyBetPlacedMessage && (
@@ -385,11 +530,26 @@ export default function LobbyTab({
 
         {/* View 1: Classic casino games grid */}
         {lobbySubView === 'all_games' && (
-          <div className="space-y-4">
+          <div className="space-y-4 min-h-[500px]">
 
             {filteredGames.length === 0 ? (
-              <div className="py-12 text-center text-stone-500 font-sans text-xs bg-[#111111]/40 border border-white/5 rounded-2xl">
-                No games found in this category. Select another chip to explore!
+              <div className="py-12 text-center text-stone-500 font-sans text-xs bg-[#111111]/40 border border-white/5 rounded-2xl flex flex-col items-center justify-center gap-2">
+                <Search className="w-8 h-8 text-zinc-600 animate-pulse" />
+                <span>
+                  {searchTerm.trim() 
+                    ? `No games found matching "${searchTerm}".` 
+                    : "No games found in this category."}
+                </span>
+                <button
+                  onClick={() => {
+                    playClick();
+                    setSearchTerm('');
+                    onSelectCategory('all');
+                  }}
+                  className="mt-2 text-[10px] font-sans font-bold text-[#FF2348] hover:underline uppercase tracking-wider cursor-pointer"
+                >
+                  Reset filters & search
+                </button>
               </div>
             ) : (
               /* Game card grid: Styled exactly like standard professional layout (e.g. Khelo24Match) with 2-column mobile grid and premium landscape cards */
@@ -477,8 +637,12 @@ export default function LobbyTab({
                           onSelectGame(game);
                         }}
                         onMouseEnter={() => playHover()}
-                        className="group relative aspect-[4/3] bg-[#111111] rounded-xl overflow-hidden border border-[#FF2348]/20 hover:border-[#FF2348]/50 shadow-[0_6px_16px_rgba(0,0,0,0.6)] hover:shadow-[0_0_15px_rgba(255,35,72,0.3)] transition-all duration-300 cursor-pointer select-none transform-gpu hover:-translate-y-1"
+                        className="group relative aspect-[4/3] bg-[#111111] rounded-xl overflow-hidden border border-[#FF2348]/15 hover:border-[#FF2348]/60 shadow-[0_6px_16px_rgba(0,0,0,0.6)] hover:shadow-[0_0_20px_rgba(255,35,72,0.35)] transition-all duration-300 ease-out cursor-pointer select-none transform-gpu scale-100 hover:scale-[1.03] hover:-translate-y-1"
                       >
+                        {/* Premium Inner Glow Border & Light Source on Hover */}
+                        <div className="absolute inset-0 rounded-xl border border-transparent group-hover:border-[#FF2348]/30 transition-all duration-300 pointer-events-none z-20" />
+                        <div className="absolute -inset-px rounded-xl bg-gradient-to-t from-[#FF2348]/0 to-[#FF2348]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10" />
+
                         {/* Game Full Cover Artwork / Fallback graphic */}
                         {isImageBroken ? (
                           <div className={`absolute inset-0 bg-gradient-to-br ${fallbackGraphic.bg} flex items-center justify-center`}>
@@ -500,7 +664,28 @@ export default function LobbyTab({
                         )}
 
                         {/* Dark gradient overlay for extreme depth */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent transition-all duration-300" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent transition-all duration-300" />
+
+                        {/* Game Name in Lower Left Corner in a small elegant font matching the reference image */}
+                        <div className="absolute bottom-2 left-2.5 z-10 pointer-events-none max-w-[70%]">
+                          <p className="text-[10px] sm:text-[11px] font-sans font-medium text-white tracking-wide drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.95)] line-clamp-1">
+                            {game.name}
+                          </p>
+                        </div>
+
+                        {/* Recommended Badge at the top right corner */}
+                        {(game.isHot || idx % 4 === 0) && (
+                          <div className="absolute top-1.5 right-1.5 z-10 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[8px] font-sans font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-md pointer-events-none scale-[0.85] origin-top-right">
+                            RECOMMENDED
+                          </div>
+                        )}
+
+                        {/* Promo Badge at the bottom right corner */}
+                        {idx % 3 === 1 && (
+                          <div className="absolute bottom-1.5 right-1.5 z-10 bg-[#B5007D] text-white text-[8px] font-sans font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm pointer-events-none scale-[0.85] origin-bottom-right">
+                            PROMO
+                          </div>
+                        )}
 
                         {/* Premium Hover Overlay: Reveals dark blur with centered Play icon and NO distracting texts */}
                         <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 flex items-center justify-center backdrop-blur-sm">

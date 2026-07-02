@@ -1025,17 +1025,193 @@ export default function App() {
   const hasFloatingHeader = !isSportsViewActive && !activePlayGame && !loadingGame && activeTab !== 'wheel';
 
   return (
-    <div className={`h-screen w-full max-w-full overflow-hidden ${isSportsViewActive ? 'bg-[#FAFAFA] text-[#111111]' : 'bg-[#050505] text-white'} flex flex-col items-center select-none transition-colors duration-300`}>
+    <div className={`h-screen w-full max-w-full overflow-hidden ${isSportsViewActive ? 'bg-[#FAFAFA] text-[#111111]' : 'bg-[#05070D] text-white'} flex flex-col items-center select-none transition-colors duration-300`}>
       {/* Container sizing redesigned to be full-screen, removing the old max-w-md mobile frame limit! */}
-      <div className={`w-full max-w-full h-full overflow-hidden ${isSportsViewActive ? 'bg-[#FAFAFA]' : 'bg-[#050505]'} flex flex-col relative transition-colors duration-300`}>
+      <div className={`w-full max-w-full h-full overflow-hidden ${isSportsViewActive ? 'bg-[#FAFAFA]' : 'bg-[#05070D]'} flex flex-col relative transition-colors duration-300`}>
         
-        {/* Absolute Background Glowing Gradients */}
+        {/* Absolute Background Layered Premium System */}
         {!isSportsViewActive && (
-          <>
-            <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-[#B4002C]/15 to-transparent pointer-events-none z-0" />
-            <div className="absolute top-[20%] left-[-50px] w-72 h-72 bg-[#FF2348]/5 rounded-full blur-3xl pointer-events-none animate-pulse" style={{ animationDuration: '6s' }} />
-            <div className="absolute bottom-[20%] right-[-50px] w-72 h-72 bg-[#B4002C]/5 rounded-full blur-3xl pointer-events-none animate-pulse" style={{ animationDuration: '8s' }} />
-          </>
+          <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+            {/* Style injections for GPU-accelerated premium animations */}
+            <style dangerouslySetInnerHTML={{__html: `
+              @keyframes floatParticle-1 {
+                0%, 100% { transform: translateY(0) translateX(0) scale(1); opacity: 0.15; }
+                50% { transform: translateY(-40px) translateX(20px) scale(1.3); opacity: 0.45; }
+              }
+              @keyframes floatParticle-2 {
+                0%, 100% { transform: translateY(0) translateX(0) scale(1); opacity: 0.1; }
+                50% { transform: translateY(-60px) translateX(-30px) scale(0.8); opacity: 0.35; }
+              }
+              @keyframes floatParticle-3 {
+                0%, 100% { transform: translateY(0) translateX(0) scale(1.2); opacity: 0.2; }
+                50% { transform: translateY(-30px) translateX(15px) scale(0.9); opacity: 0.5; }
+              }
+              @keyframes pulseWave {
+                0%, 100% { opacity: 0.04; transform: scale(1); }
+                50% { opacity: 0.08; transform: scale(1.02); }
+              }
+              @keyframes slowGlow {
+                0%, 100% { opacity: 0.8; transform: scale(1) rotate(0deg); }
+                50% { opacity: 1; transform: scale(1.05) rotate(10deg); }
+              }
+            `}} />
+
+            {/* 1. Base Dark Slate Layer */}
+            <div className="absolute inset-0 bg-[#05070D]" />
+
+            {/* 2. Deep Realistic Lighting Gradient Layers (Navy & Indigo) */}
+            <div 
+              className="absolute inset-0" 
+              style={{
+                background: `
+                  radial-gradient(circle at 10% 20%, #0A1025 0%, transparent 50%),
+                  radial-gradient(circle at 90% 80%, #120A2F 0%, transparent 60%),
+                  radial-gradient(circle at 50% 40%, #080C1E 0%, #05070D 100%)
+                `
+              }}
+            />
+
+            {/* 3. Abstract Geometric Mesh Grid (3-5% opacity) */}
+            <div 
+              className="absolute inset-0 mix-blend-overlay"
+              style={{
+                backgroundImage: `
+                  linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px)
+                `,
+                backgroundSize: '45px 45px',
+                opacity: 0.7
+              }}
+            />
+
+            {/* Diagonal abstract fine light beams */}
+            <div 
+              className="absolute inset-0 mix-blend-color-dodge opacity-[0.04]"
+              style={{
+                backgroundImage: 'repeating-linear-gradient(135deg, rgba(0, 229, 255, 0.15) 0px, rgba(0, 229, 255, 0.15) 1px, transparent 1px, transparent 120px)'
+              }}
+            />
+
+            {/* 4. Overlapping Luxurious Large Glowing Orbs (250-500px blur) */}
+            {/* Center-Top Ambient Dark Purple-Violet Bloom */}
+            <div 
+              className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[700px] h-[450px] rounded-full pointer-events-none"
+              style={{
+                background: 'radial-gradient(circle, rgba(138, 46, 255, 0.09) 0%, rgba(18, 10, 47, 0) 75%)',
+                filter: 'blur(160px)',
+              }}
+            />
+
+            {/* Left Neon Cyan Orb with Pulse Animation */}
+            <div 
+              className="absolute top-[30%] -left-[15%] w-[550px] h-[550px] rounded-full pointer-events-none"
+              style={{
+                background: 'radial-gradient(circle, rgba(0, 229, 255, 0.06) 0%, rgba(10, 16, 37, 0) 70%)',
+                filter: 'blur(200px)',
+                animation: 'slowGlow 15s infinite ease-in-out'
+              }}
+            />
+
+            {/* Right Emerald Green High-contrast Spotlight */}
+            <div 
+              className="absolute top-[45%] -right-[15%] w-[600px] h-[600px] rounded-full pointer-events-none"
+              style={{
+                background: 'radial-gradient(circle, rgba(57, 255, 136, 0.04) 0%, rgba(10, 16, 37, 0) 70%)',
+                filter: 'blur(220px)',
+                animation: 'slowGlow 20s infinite ease-in-out'
+              }}
+            />
+
+            {/* Center-Bottom Electric Violet Spotlight */}
+            <div 
+              className="absolute bottom-[10%] left-[15%] w-[500px] h-[500px] rounded-full pointer-events-none"
+              style={{
+                background: 'radial-gradient(circle, rgba(138, 46, 255, 0.07) 0%, rgba(5, 7, 13, 0) 70%)',
+                filter: 'blur(180px)',
+              }}
+            />
+
+            {/* Very Subtle Gold Highlight Accent */}
+            <div 
+              className="absolute top-[15%] right-[20%] w-[350px] h-[350px] rounded-full pointer-events-none"
+              style={{
+                background: 'radial-gradient(circle, rgba(255, 213, 74, 0.02) 0%, rgba(5, 7, 13, 0) 65%)',
+                filter: 'blur(130px)',
+              }}
+            />
+
+            {/* 5. Flowing Neon Waves and Abstract Energy Curves (Lightweight SVGs) */}
+            <svg className="absolute top-0 left-0 w-full h-full opacity-[0.06] mix-blend-screen pointer-events-none" viewBox="0 0 1440 900" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ animation: 'pulseWave 12s infinite ease-in-out' }}>
+              <path d="M-100 150 C300 50, 450 400, 900 120 C1200 10, 1400 250, 1600 180" stroke="url(#cyan-violet-grad)" strokeWidth="2" strokeLinecap="round" />
+              <path d="M-50 450 C250 550, 600 200, 1000 480 C1250 600, 1350 350, 1550 410" stroke="url(#violet-green-grad)" strokeWidth="1.5" strokeLinecap="round" />
+              <defs>
+                <linearGradient id="cyan-violet-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#00E5FF" />
+                  <stop offset="50%" stopColor="#8A2EFF" />
+                  <stop offset="100%" stopColor="#39FF88" />
+                </linearGradient>
+                <linearGradient id="violet-green-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#8A2EFF" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#39FF88" stopOpacity="0.8" />
+                </linearGradient>
+              </defs>
+            </svg>
+
+            {/* 6. Subtle Floating Sparks & Particles */}
+            <div className="absolute inset-0 pointer-events-none">
+              {/* Particle 1 */}
+              <div 
+                className="absolute top-[25%] left-[15%] w-2 h-2 rounded-full bg-[#00E5FF]"
+                style={{
+                  boxShadow: '0 0 10px #00E5FF, 0 0 20px #00E5FF',
+                  filter: 'blur(0.5px)',
+                  animation: 'floatParticle-1 8s infinite ease-in-out'
+                }}
+              />
+              {/* Particle 2 */}
+              <div 
+                className="absolute top-[65%] left-[45%] w-1.5 h-1.5 rounded-full bg-[#39FF88]"
+                style={{
+                  boxShadow: '0 0 8px #39FF88',
+                  filter: 'blur(0.5px)',
+                  animation: 'floatParticle-2 11s infinite ease-in-out'
+                }}
+              />
+              {/* Particle 3 */}
+              <div 
+                className="absolute top-[40%] right-[25%] w-2 h-2 rounded-full bg-[#8A2EFF]"
+                style={{
+                  boxShadow: '0 0 12px #8A2EFF',
+                  filter: 'blur(0.5px)',
+                  animation: 'floatParticle-3 9s infinite ease-in-out'
+                }}
+              />
+              {/* Particle 4 */}
+              <div 
+                className="absolute bottom-[25%] right-[10%] w-1.5 h-1.5 rounded-full bg-[#FFD54A]"
+                style={{
+                  boxShadow: '0 0 6px #FFD54A',
+                  animation: 'floatParticle-1 14s infinite ease-in-out'
+                }}
+              />
+            </div>
+
+            {/* 7. Soft Edge Vignette Shading */}
+            <div 
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'radial-gradient(circle at 50% 50%, transparent 20%, rgba(5, 7, 13, 0.95) 100%)'
+              }}
+            />
+
+            {/* 8. Premium Noise/Grain Texture (2.5% opacity) */}
+            <div 
+              className="absolute inset-0 opacity-[0.025] pointer-events-none mix-blend-overlay"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
+              }}
+            />
+          </div>
         )}
 
         {/* 1. STICKY / FIXED VIP HEADER WITH NEW PREMIUM THEME */}
@@ -1053,45 +1229,61 @@ export default function App() {
             <div className="absolute bottom-0 left-0 w-[140px] h-[3px] bg-[#FF2348] transform skew-x-12 origin-bottom-left" />
 
             {/* Left logo and branding */}
-            <div className="relative flex items-center gap-2 select-none cursor-pointer" onClick={() => { if (isLoggedIn) { setActiveTab('games'); setGamesSubView('lobby'); } }}>
-              {/* No ambient glow behind the logo */}
-              
-              {/* Styled Slanted Modern TF Logo in Neon Crimson Red */}
-              {globalSettings?.logo_url ? (
-                <img
-                  src={globalSettings.logo_url}
-                  alt="Logo"
-                  className="w-[44px] h-[44px] object-contain shrink-0 filter drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.5)]"
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <svg className="w-[44px] h-[44px] shrink-0 filter drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.5)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  {/* Slanted Stylized T Part in Red Gradient */}
-                  <path 
-                    d="M 22 20 H 95 L 91.5 34 H 54 L 42.5 80 H 26.5 L 38 34 H 18.5 L 20 28 H 58 L 59.5 24 H 21 L 22 20 Z" 
-                    fill="url(#header-logo-grad-red)" 
-                  />
-                  {/* Slanted Stylized F Part in Clean White/Silver */}
-                  <path 
-                    d="M 60 38 H 87.5 L 85 48 H 68.5 L 60.5 80 H 49.5 Z" 
-                    fill="url(#header-logo-grad-white)" 
-                  />
-                  <defs>
-                    <linearGradient id="header-logo-grad-red" x1="20" y1="20" x2="95" y2="80" gradientUnits="userSpaceOnUse">
-                      <stop stopColor="#FF2348" />
-                      <stop offset="1" stopColor="#B4002C" />
-                    </linearGradient>
-                    <linearGradient id="header-logo-grad-white" x1="49.5" y1="38" x2="87.5" y2="80" gradientUnits="userSpaceOnUse">
-                      <stop stopColor="#FFFFFF" />
-                      <stop offset="1" stopColor="#E2E8F0" />
-                    </linearGradient>
-                  </defs>
-                </svg>
+            <div className="flex items-center gap-3">
+              {(activeTab === 'account' || activeTab === 'refer') && (
+                <button
+                  onClick={() => {
+                    playClick();
+                    setActiveTab('games');
+                    setGamesSubView('lobby');
+                  }}
+                  className="w-9 h-9 rounded-lg bg-zinc-900/90 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white hover:border-zinc-700 hover:bg-zinc-800/60 active:scale-95 transition-all outline-none cursor-pointer shadow-md shadow-black/40"
+                  aria-label="Back to Lobby"
+                >
+                  <ArrowLeft className="w-4.5 h-4.5" />
+                </button>
               )}
-              {/* White + Neon Crimson branding */}
-              <div className="flex flex-col justify-center">
-                <span className="font-sans font-black italic text-[14px] tracking-wider text-white leading-none">TENZO</span>
-                <span className="font-sans font-black italic text-[10px] tracking-widest text-[#FF2348] uppercase leading-none mt-0.5">247</span>
+
+              <div className="relative flex items-center gap-2 select-none cursor-pointer" onClick={() => { if (isLoggedIn) { setActiveTab('games'); setGamesSubView('lobby'); } }}>
+                {/* No ambient glow behind the logo */}
+                
+                {/* Styled Slanted Modern TF Logo in Neon Crimson Red */}
+                {globalSettings?.logo_url ? (
+                  <img
+                    src={globalSettings.logo_url}
+                    alt="Logo"
+                    className="w-[44px] h-[44px] object-contain shrink-0 filter drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.5)]"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <svg className="w-[44px] h-[44px] shrink-0 filter drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.5)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {/* Slanted Stylized T Part in Red Gradient */}
+                    <path 
+                      d="M 22 20 H 95 L 91.5 34 H 54 L 42.5 80 H 26.5 L 38 34 H 18.5 L 20 28 H 58 L 59.5 24 H 21 L 22 20 Z" 
+                      fill="url(#header-logo-grad-red)" 
+                    />
+                    {/* Slanted Stylized F Part in Clean White/Silver */}
+                    <path 
+                      d="M 60 38 H 87.5 L 85 48 H 68.5 L 60.5 80 H 49.5 Z" 
+                      fill="url(#header-logo-grad-white)" 
+                    />
+                    <defs>
+                      <linearGradient id="header-logo-grad-red" x1="20" y1="20" x2="95" y2="80" gradientUnits="userSpaceOnUse">
+                        <stop stopColor="#FF2348" />
+                        <stop offset="1" stopColor="#B4002C" />
+                      </linearGradient>
+                      <linearGradient id="header-logo-grad-white" x1="49.5" y1="38" x2="87.5" y2="80" gradientUnits="userSpaceOnUse">
+                        <stop stopColor="#FFFFFF" />
+                        <stop offset="1" stopColor="#E2E8F0" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                )}
+                {/* White + Neon Crimson branding */}
+                <div className="flex flex-col justify-center">
+                  <span className="font-sans font-black italic text-[14px] tracking-wider text-white leading-none">TENZO</span>
+                  <span className="font-sans font-black italic text-[10px] tracking-widest text-[#FF2348] uppercase leading-none mt-0.5">247</span>
+                </div>
               </div>
             </div>
 

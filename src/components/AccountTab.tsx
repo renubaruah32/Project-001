@@ -567,6 +567,19 @@ export default function AccountTab({
           <span>RETURN TO CASINO & SPORTS LOBBY</span>
         </button>
 
+        {/* ==================== INTEGRATED PREMIUM LOGOUT BUTTON ==================== */}
+        <button
+          onClick={() => {
+            playClick();
+            onLogout();
+          }}
+          onMouseEnter={() => playHover()}
+          className="w-full py-2.5 px-4 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white font-sans font-black text-[11px] uppercase tracking-[0.15em] transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] mt-2.5 shadow-sm"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          <span>SECURELY LOGOUT</span>
+        </button>
+
 
 
 
@@ -1088,23 +1101,6 @@ export default function AccountTab({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* FIXED LOGOUT FLOATING FOOTER BAR */}
-      <div className="fixed bottom-4 inset-x-0 mx-auto flex justify-center z-40 select-none pb-safe">
-        <div className="flex items-center justify-center p-1.5 rounded-xl bg-[#090909]/90 backdrop-blur-md border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.9)]">
-          <button
-            onClick={() => {
-              playClick();
-              onLogout();
-            }}
-            onMouseEnter={() => playHover()}
-            className="px-4 py-2 rounded-lg bg-gradient-to-r from-[#FF2A2A] to-[#ff3b4d] text-white font-sans font-black text-[9.5px] uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-          >
-            <LogOut className="w-3.5 h-3.5 text-white" />
-            <span>LOGOUT</span>
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

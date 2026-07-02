@@ -140,7 +140,35 @@ export default function LobbyTab({
         buttonColor: 'bg-gradient-to-r from-[#FF2348] to-[#B4002C] text-white shadow-[0_4px_14px_rgba(255,35,72,0.35)]',
         bgGraphic: null
       }))
-    : defaultSlides;
+    : (globalSettings?.hero_poster_url && globalSettings.hero_poster_url !== '""' && globalSettings.hero_poster_url.trim() !== ''
+        ? [{
+            id: 'poster-hero',
+            badge: 'PROMOTION',
+            badgeColor: 'bg-[#FF2348]/10 border-[#FF2348]/20 text-[#FF2348]',
+            title: globalSettings.hero_heading || 'PREMIUM PROMOTION',
+            subtitle: globalSettings.hero_subheading || 'JOIN THE ACTION TODAY',
+            highlight: '',
+            ctaText: globalSettings.hero_cta_type === 'deposit' ? 'DEPOSIT NOW' : 'PLAY NOW',
+            ctaAction: () => {
+              const ctaType = globalSettings.hero_cta_type || 'deposit';
+              if (ctaType === 'deposit') {
+                onNavigateBank?.('deposit');
+              } else {
+                let targetId = 'aviator';
+                const targetGame = games.find(g => g.id === targetId) || games[0];
+                if (targetGame) onSelectGame(targetGame);
+              }
+            },
+            imageUrl: globalSettings.hero_poster_url,
+            gradient: 'from-[#111] via-black to-[#111]',
+            accentColor: 'text-[#FF2348]',
+            buttonColor: 'bg-gradient-to-r from-[#FF2348] to-[#B4002C] text-white shadow-[0_4px_14px_rgba(255,35,72,0.35)]',
+            bgGraphic: null
+          }]
+        : []
+      );
+
+  const hasHeroContent = slidesToUse.length > 0;
 
   useEffect(() => {
     if (slidesToUse.length <= 1) return;
@@ -150,7 +178,7 @@ export default function LobbyTab({
     return () => clearInterval(interval);
   }, [slidesToUse.length]);
 
-  const activeSlide = slidesToUse[currentHeroIdx % slidesToUse.length];
+  const activeSlide = slidesToUse.length > 0 ? slidesToUse[currentHeroIdx % slidesToUse.length] : null;
   const heroImage = activeSlide?.imageUrl || '';
 
   const handleHeroClick = () => {
@@ -338,58 +366,60 @@ export default function LobbyTab({
     <div className="space-y-4 select-none relative pb-10 pt-0">
 
       {/* 1. HERO BANNER (Edge-to-Edge Full Size, Text-free for neat visual-only backdrop) */}
-      <div className="relative mx-[-16px] w-[calc(100%+32px)] sm:mx-0 sm:w-full overflow-hidden sm:rounded-2xl border-y sm:border border-white/5 bg-[#0a0a0a] shadow-2xl select-none group min-h-[160px] sm:min-h-[200px] md:min-h-[220px] flex items-center cursor-pointer" onClick={handleHeroClick}>
-        
-        {/* Carousel Slide Wrapper */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeSlide.id}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-            className={`absolute inset-0 w-full h-full bg-gradient-to-r ${activeSlide.gradient} flex items-center`}
+      {hasHeroContent && activeSlide && (
+        <div className="relative mx-[-16px] w-[calc(100%+32px)] sm:mx-0 sm:w-full overflow-hidden sm:rounded-2xl border-y sm:border border-white/5 bg-[#0a0a0a] shadow-2xl select-none group min-h-[160px] sm:min-h-[200px] md:min-h-[220px] flex items-center cursor-pointer animate-fade-in" onClick={handleHeroClick}>
+          
+          {/* Carousel Slide Wrapper */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeSlide.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              className={`absolute inset-0 w-full h-full bg-gradient-to-r ${activeSlide.gradient} flex items-center`}
+            >
+              {/* Custom Background Image if activeSlide.imageUrl exists */}
+              {activeSlide.imageUrl && (
+                <div 
+                  className="absolute inset-0 w-full h-full bg-cover bg-center opacity-40 mix-blend-overlay"
+                  style={{ backgroundImage: `url(${activeSlide.imageUrl})` }}
+                />
+              )}
+
+              {/* Accent Graphic Elements */}
+              {activeSlide.bgGraphic}
+
+              {/* Glowing Corner Vignette */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40 pointer-events-none" />
+              <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-black to-transparent pointer-events-none" />
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Desktop Arrow Navigation */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              playClick();
+              setCurrentHeroIdx((prev) => (prev - 1 + slidesToUse.length) % slidesToUse.length);
+            }}
+            className="absolute left-4 z-20 w-8 h-8 rounded-lg bg-black/60 hover:bg-black/95 text-white/75 hover:text-white border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:flex cursor-pointer active:scale-95"
           >
-            {/* Custom Background Image if activeSlide.imageUrl exists */}
-            {activeSlide.imageUrl && (
-              <div 
-                className="absolute inset-0 w-full h-full bg-cover bg-center opacity-40 mix-blend-overlay"
-                style={{ backgroundImage: `url(${activeSlide.imageUrl})` }}
-              />
-            )}
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              playClick();
+              setCurrentHeroIdx((prev) => (prev + 1) % slidesToUse.length);
+            }}
+            className="absolute right-4 z-20 w-8 h-8 rounded-lg bg-black/60 hover:bg-black/95 text-white/75 hover:text-white border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:flex cursor-pointer active:scale-95"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
 
-            {/* Accent Graphic Elements */}
-            {activeSlide.bgGraphic}
-
-            {/* Glowing Corner Vignette */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40 pointer-events-none" />
-            <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-black to-transparent pointer-events-none" />
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Desktop Arrow Navigation */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            playClick();
-            setCurrentHeroIdx((prev) => (prev - 1 + slidesToUse.length) % slidesToUse.length);
-          }}
-          className="absolute left-4 z-20 w-8 h-8 rounded-lg bg-black/60 hover:bg-black/95 text-white/75 hover:text-white border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:flex cursor-pointer active:scale-95"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            playClick();
-            setCurrentHeroIdx((prev) => (prev + 1) % slidesToUse.length);
-          }}
-          className="absolute right-4 z-20 w-8 h-8 rounded-lg bg-black/60 hover:bg-black/95 text-white/75 hover:text-white border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:flex cursor-pointer active:scale-95"
-        >
-          <ChevronRight className="w-5 h-5" />
-        </button>
-
-      </div>
+        </div>
+      )}
 
 
       {/* 2. DYNAMIC SEGMENTED VIEWS: CASINO VS SPORTS */}

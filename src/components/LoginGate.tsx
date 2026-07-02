@@ -282,7 +282,9 @@ export default function LoginGate({ onLogin }: LoginGateProps) {
               <div className="flex bg-[#121620] border border-zinc-800/80 rounded-xl overflow-hidden focus-within:border-red-500/80 transition-colors h-10 items-center px-3 gap-2">
                 <Shield className="w-4 h-4 text-zinc-600 shrink-0" />
                 <input
-                  type="text"
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   maxLength={6}
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}

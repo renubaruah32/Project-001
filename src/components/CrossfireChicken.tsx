@@ -1943,9 +1943,10 @@ export default function CrossfireChicken({ user, onUpdateUser, onAddTransaction,
         {/* sleeker exit button to lobby at the bottom of everything */}
         <button
           onClick={onClose}
-          className="text-center text-zinc-500 hover:text-white transition-colors text-[10px] uppercase tracking-widest font-bold mt-4 mb-2 flex items-center justify-center gap-1 cursor-pointer mx-auto"
+          className="text-center text-zinc-500 hover:text-white transition-colors text-[10px] uppercase tracking-widest font-bold mt-4 mb-2 flex items-center justify-center gap-1.5 cursor-pointer mx-auto"
         >
-          ← Return to Lobby
+          <X className="w-3 h-3" />
+          <span>Exit Game</span>
         </button>
 
       </div>

@@ -304,73 +304,8 @@ export default function LobbyTab({
   return (
     <div className="space-y-4 select-none relative pb-10 pt-0">
 
-      {/* Wrapping Ticker and Hero together with a tighter gap to reduce spacing */}
-      <div className="flex flex-col gap-1">
-        {/* LIVE MEGA WINS TICKER (Social Proof) - Placed between Header and Hero */}
-        <div className="relative w-full overflow-hidden bg-transparent border-none px-2 flex items-center gap-2 select-none h-6">
-          {/* Blinking Live Label - Sleek and minimal, no heavy button capsule */}
-          <div className="flex items-center gap-1 px-1 shrink-0 z-10">
-            <span className="relative flex h-1 w-1">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF2348] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-1 w-1 bg-[#FF2348]"></span>
-            </span>
-            <span className="text-[7.5px] font-sans font-black uppercase tracking-widest text-[#FF2348] whitespace-nowrap">
-              LIVE WINS
-            </span>
-          </div>
-
-          {/* Scroll Area */}
-          <div className="relative flex-1 overflow-hidden h-full flex items-center">
-            {/* High-end Edge Fade Gradients */}
-            <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-[#111111]/80 to-transparent pointer-events-none z-10" />
-            <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-[#111111]/80 to-transparent pointer-events-none z-10" />
-
-            <div 
-              className="animate-marquee flex items-center gap-8 text-[9px] font-mono font-medium text-stone-300 uppercase tracking-wide h-full"
-              style={{ animationDuration: '24s' }}
-            >
-              {[
-                { user: "deb***", game: "Aviator", multiplier: "84.5x", win: 42250 },
-                { user: "sam***", game: "Neon Wheel", multiplier: "120.0x", win: 120000 },
-                { user: "vik***", game: "Chicken Road", multiplier: "42.1x", win: 84200 },
-                { user: "rah***", game: "Dragon Tiger", multiplier: "15.0x", win: 45000 },
-                { user: "pri***", game: "Gates of Olympus", multiplier: "250.0x", win: 250000 },
-                { user: "ans***", game: "Mines", multiplier: "75.0x", win: 75000 },
-                { user: "gur***", game: "Aviator", multiplier: "148.2x", win: 148200 }
-              ].concat([
-                { user: "deb***", game: "Aviator", multiplier: "84.5x", win: 42250 },
-                { user: "sam***", game: "Neon Wheel", multiplier: "120.0x", win: 120000 },
-                { user: "vik***", game: "Chicken Road", multiplier: "42.1x", win: 84200 },
-                { user: "rah***", game: "Dragon Tiger", multiplier: "15.0x", win: 45000 },
-                { user: "pri***", game: "Gates of Olympus", multiplier: "250.0x", win: 250000 },
-                { user: "ans***", game: "Mines", multiplier: "75.0x", win: 75000 },
-                { user: "gur***", game: "Aviator", multiplier: "148.2x", win: 148200 }
-              ], [
-                { user: "deb***", game: "Aviator", multiplier: "84.5x", win: 42250 },
-                { user: "sam***", game: "Neon Wheel", multiplier: "120.0x", win: 120000 },
-                { user: "vik***", game: "Chicken Road", multiplier: "42.1x", win: 84200 },
-                { user: "rah***", game: "Dragon Tiger", multiplier: "15.0x", win: 45000 },
-                { user: "pri***", game: "Gates of Olympus", multiplier: "250.0x", win: 250000 },
-                { user: "ans***", game: "Mines", multiplier: "75.0x", win: 75000 },
-                { user: "gur***", game: "Aviator", multiplier: "148.2x", win: 148200 }
-              ]).map((item, itemIdx) => (
-                <div key={itemIdx} className="flex items-center gap-1.5 whitespace-nowrap shrink-0">
-                  <span className="text-stone-500 font-sans font-bold text-[9px]">{item.user}</span>
-                  <span className="text-[#FF2348] font-sans font-black tracking-tight">₹{formatBalance(item.win)}</span>
-                  <span className="text-stone-400 text-[9px]">on</span>
-                  <span className="text-white font-sans font-extrabold text-[9px]">{item.game}</span>
-                  <span className="px-1 py-0.5 text-[7.5px] font-sans font-black bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 rounded leading-none">
-                    {item.multiplier}
-                  </span>
-                  <span className="text-stone-700 font-bold">•</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* 1. HERO BANNER (Edge-to-Edge Full Size, Text-free for neat visual-only backdrop) */}
-        <div className="relative mx-[-16px] w-[calc(100%+32px)] sm:mx-0 sm:w-full overflow-hidden sm:rounded-2xl border-y sm:border border-white/5 bg-[#0a0a0a] shadow-2xl select-none group min-h-[160px] sm:min-h-[200px] md:min-h-[220px] flex items-center cursor-pointer" onClick={handleHeroClick}>
+      {/* 1. HERO BANNER (Edge-to-Edge Full Size, Text-free for neat visual-only backdrop) */}
+      <div className="relative mx-[-16px] w-[calc(100%+32px)] sm:mx-0 sm:w-full overflow-hidden sm:rounded-2xl border-y sm:border border-white/5 bg-[#0a0a0a] shadow-2xl select-none group min-h-[160px] sm:min-h-[200px] md:min-h-[220px] flex items-center cursor-pointer" onClick={handleHeroClick}>
         
         {/* Carousel Slide Wrapper */}
         <AnimatePresence mode="wait">
@@ -422,7 +357,7 @@ export default function LobbyTab({
         </button>
 
       </div>
-</div>
+
 
       {/* 2. DYNAMIC SEGMENTED VIEWS: CASINO VS SPORTS */}
       <section className="space-y-4 pb-2">

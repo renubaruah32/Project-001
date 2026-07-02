@@ -1026,11 +1026,11 @@ export default function App() {
           <motion.header
             initial={{ y: 0, opacity: 1 }}
             animate={{
-              y: isHeaderVisible ? 0 : -110,
+              y: isHeaderVisible ? 0 : (activeTab === 'games' ? -130 : -110),
               opacity: isHeaderVisible ? 1 : 0
             }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="fixed top-0 left-0 right-0 z-[9999] h-[84px] bg-[#111111]/90 backdrop-blur-md px-4 flex items-center justify-between select-none border-b border-zinc-800 rounded-none shadow-[0_4px_30px_rgba(0,0,0,0.95)]"
+            className={`fixed top-0 left-0 right-0 z-[9999] ${activeTab === 'games' ? 'h-[105px]' : 'h-[84px]'} bg-[#111111]/90 backdrop-blur-md px-4 flex items-center justify-between select-none border-b border-zinc-800 rounded-none shadow-[0_4px_30px_rgba(0,0,0,0.95)] transition-all duration-300`}
           >
             {/* Slanted premium geometric design overlay to match the reference image */}
             <div className="absolute bottom-0 left-0 w-[140px] h-[3px] bg-[#FF2348] transform skew-x-12 origin-bottom-left" />
@@ -1079,9 +1079,11 @@ export default function App() {
             </div>
 
             {/* Right: Wallet/Login/Logout Section */}
-            <div className="flex items-center gap-2 shrink-0 select-none">
+            <div className={`flex shrink-0 select-none ${activeTab === 'games' ? 'flex-col gap-3.5 items-end justify-center py-1' : 'items-center gap-2'}`}>
               {isLoggedIn ? (
-                activeTab === 'bank' ? (
+                (activeTab === 'account' || activeTab === 'refer') ? (
+                  null
+                ) : activeTab === 'bank' ? (
                   <>
                     {/* Premium Wallet Balance Card (Shifted to the rightmost slot) */}
                     <motion.div
@@ -1091,9 +1093,9 @@ export default function App() {
                       {/* Subtle red linear accent lighting from the side */}
                       <div className="absolute top-0 right-0 w-8 h-full bg-gradient-to-l from-[#FF2348]/10 to-transparent pointer-events-none" />
                       <Wallet className="w-3.5 h-3.5 text-[#FF2348] shrink-0 filter drop-shadow-[0_0_4px_rgba(255,35,72,0.6)]" />
-                      <div className="relative flex flex-col items-end justify-center min-w-0 flex-1 leading-none">
-                        <span className="text-[7px] font-mono uppercase tracking-widest text-zinc-500 font-black block leading-none mb-0.5">BALANCE</span>
-                        <div className="relative flex items-center min-w-0 leading-none">
+                      <div className="relative flex flex-col items-center justify-center min-w-0 flex-1 leading-none">
+                        <span className="text-[7px] font-mono uppercase tracking-widest text-zinc-500 font-black block leading-none mb-0.5 text-center">BALANCE</span>
+                        <div className="relative flex items-center justify-center min-w-0 leading-none">
                           {user.isBalanceLoading ? (
                             <div className="flex items-center gap-1">
                               <span className="relative flex h-1.5 w-1.5">
@@ -1103,7 +1105,7 @@ export default function App() {
                               <span className="font-sans font-bold text-[7px] uppercase tracking-wider text-zinc-400 leading-none">...</span>
                             </div>
                           ) : (
-                            <span className="font-sans font-black text-[11px] tracking-wide inline-block text-white leading-none whitespace-nowrap">
+                            <span className="font-sans font-black text-[11px] tracking-wide inline-block text-white leading-none whitespace-nowrap text-center">
                               {formatBalance(user.walletBalance)}
                             </span>
                           )}
@@ -1121,9 +1123,9 @@ export default function App() {
                       {/* Subtle red linear accent lighting from the side */}
                       <div className="absolute top-0 right-0 w-8 h-full bg-gradient-to-l from-[#FF2348]/10 to-transparent pointer-events-none" />
                       <Wallet className="w-3.5 h-3.5 text-[#FF2348] shrink-0 filter drop-shadow-[0_0_4px_rgba(255,35,72,0.6)]" />
-                      <div className="relative flex flex-col items-end justify-center min-w-0 flex-1 leading-none">
-                        <span className="text-[7px] font-mono uppercase tracking-widest text-zinc-500 font-black block leading-none mb-0.5">BALANCE</span>
-                        <div className="relative flex items-center min-w-0 leading-none">
+                      <div className="relative flex flex-col items-center justify-center min-w-0 flex-1 leading-none">
+                        <span className="text-[7px] font-mono uppercase tracking-widest text-zinc-500 font-black block leading-none mb-0.5 text-center">BALANCE</span>
+                        <div className="relative flex items-center justify-center min-w-0 leading-none">
                           {user.isBalanceLoading ? (
                             <div className="flex items-center gap-1">
                               <span className="relative flex h-1.5 w-1.5">
@@ -1133,7 +1135,7 @@ export default function App() {
                               <span className="font-sans font-bold text-[7px] uppercase tracking-wider text-zinc-400 leading-none">...</span>
                             </div>
                           ) : (
-                            <span className="font-sans font-black text-[11px] tracking-wide inline-block text-white leading-none whitespace-nowrap">
+                            <span className="font-sans font-black text-[11px] tracking-wide inline-block text-white leading-none whitespace-nowrap text-center">
                               {formatBalance(user.walletBalance)}
                             </span>
                           )}
@@ -1173,33 +1175,14 @@ export default function App() {
           </motion.header>
         )}
 
-        {/* Fixed Back Button for Account and Bank Page placed right below the website logo/header */}
-        {!isSportsViewActive && !activePlayGame && !loadingGame && isLoggedIn && (activeTab === 'account' || activeTab === 'bank') && (
-          <motion.button
-            initial={{ opacity: 0, y: -10 }}
-            animate={{
-              y: isHeaderVisible ? 0 : -110,
-              opacity: isHeaderVisible ? 1 : 0
-            }}
-            transition={{ duration: 0.25, ease: "easeInOut" }}
-            onClick={() => {
-              playClick();
-              setActiveTab('games');
-            }}
-            onMouseEnter={() => playHover()}
-            className="fixed top-[94px] left-4 z-[9999] flex items-center gap-2 px-4 py-2 rounded-full font-sans text-[11px] font-black tracking-widest uppercase text-zinc-100 hover:text-white bg-[#FF2348]/10 hover:bg-[#FF2348]/20 border border-[#FF2348]/20 hover:border-[#FF2348]/40 shadow-[0_4px_24px_rgba(0,0,0,0.85)] hover:shadow-[0_0_20px_rgba(255,35,72,0.25)] transition-all cursor-pointer active:scale-95"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 text-[#FF2348]" />
-            <span>BACK TO GAMES</span>
-          </motion.button>
-        )}
+
 
           <>
 
         {/* 2. TAB VIEWS WRAPPER WITH MOTION TRANSITIONS */}
         <main 
           onScroll={handleMainScroll}
-          className={`flex-1 select-none relative z-10 overflow-y-auto w-full ${isSportsViewActive ? 'px-0 pt-0 pb-0' : `max-w-6xl mx-auto px-4 ${hasFloatingHeader ? 'pt-[90px]' : 'pt-3'} ${activeTab === 'bank' ? 'pb-6' : 'pb-[110px]'}`}`}
+          className={`flex-1 select-none relative z-10 overflow-y-auto w-full ${isSportsViewActive ? 'px-0 pt-0 pb-0' : `max-w-6xl mx-auto px-4 ${hasFloatingHeader ? (activeTab === 'games' ? 'pt-[115px]' : 'pt-[90px]') : 'pt-3'} ${activeTab === 'bank' ? 'pb-6' : 'pb-[110px]'}`}`}
         >
           <AnimatePresence mode="wait">
             <motion.div
@@ -1315,15 +1298,7 @@ export default function App() {
           </AnimatePresence>
         </main>
 
-        {/* Solid background mask at the bottom to prevent games/content from showing behind the floating footer */}
-        {!isSportsViewActive && activeTab !== 'bank' && activeTab !== 'account' && !activePlayGame && (
-          <motion.div 
-            initial={{ opacity: 1 }}
-            animate={{ opacity: isFooterVisible ? 1 : 0 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
-            className="fixed bottom-0 inset-x-0 h-[120px] bg-gradient-to-t from-[#050505] via-[#050505] via-75% to-transparent z-30 pointer-events-none"
-          />
-        )}
+
 
         {/* 3. PREMIUM MINIMALIST STICKY NAVIGATION FOOTER */}
         {!isSportsViewActive && activeTab !== 'bank' && activeTab !== 'account' && !activePlayGame && (
@@ -1334,20 +1309,70 @@ export default function App() {
               opacity: isFooterVisible ? 1 : 0 
             }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="fixed bottom-4 inset-x-3 mx-auto w-[calc(100%-24px)] max-w-[420px] z-40 select-none pb-safe"
+            className="fixed bottom-0 inset-x-0 mx-auto w-full max-w-[480px] z-40 select-none pb-safe bg-[#111111]/95 backdrop-blur-[24px] border-t border-x border-zinc-800/80 rounded-t-[20px] shadow-[0_-8px_30px_rgba(0,0,0,0.85)]"
           >
             {/* Minimal solid shadow underneath the bar */}
-            <div className="absolute -inset-1.5 bg-black/45 rounded-[24px] blur-md pointer-events-none -z-30" />
+            <div className="absolute -inset-1 bg-black/45 rounded-t-[20px] blur-md pointer-events-none -z-30" />
+
+            {/* Sticky Live Wins Ticker integrated seamlessly */}
+            <div className="w-full bg-black/40 border-b border-zinc-900/40 py-1 px-4 flex items-center gap-2 select-none h-6.5 overflow-hidden mb-1.5">
+              <div className="flex items-center gap-1 shrink-0">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF2348] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#FF2348]"></span>
+                </span>
+                <span className="text-[7.5px] font-sans font-black uppercase tracking-widest text-[#FF2348] whitespace-nowrap">
+                  LIVE WINS
+                </span>
+              </div>
+              <div className="relative flex-1 overflow-hidden h-full flex items-center">
+                <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-[#111111] to-transparent pointer-events-none z-10" />
+                <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-[#111111] to-transparent pointer-events-none z-10" />
+                <div 
+                  className="animate-marquee flex items-center gap-6 text-[8px] font-mono font-medium text-stone-300 uppercase tracking-wide h-full"
+                  style={{ animationDuration: '32s' }}
+                >
+                  {[
+                    { user: "deb***", game: "Aviator", multiplier: "84.5x", win: 42250 },
+                    { user: "sam***", game: "Neon Wheel", multiplier: "120.0x", win: 120000 },
+                    { user: "vik***", game: "Chicken Road", multiplier: "42.1x", win: 84200 },
+                    { user: "rah***", game: "Dragon Tiger", multiplier: "15.0x", win: 45000 },
+                    { user: "pri***", game: "Gates of Olympus", multiplier: "250.0x", win: 250000 },
+                    { user: "ans***", game: "Mines", multiplier: "75.0x", win: 75000 },
+                    { user: "gur***", game: "Aviator", multiplier: "148.2x", win: 148200 }
+                  ].concat([
+                    { user: "deb***", game: "Aviator", multiplier: "84.5x", win: 42250 },
+                    { user: "sam***", game: "Neon Wheel", multiplier: "120.0x", win: 120000 },
+                    { user: "vik***", game: "Chicken Road", multiplier: "42.1x", win: 84200 },
+                    { user: "rah***", game: "Dragon Tiger", multiplier: "15.0x", win: 45000 },
+                    { user: "pri***", game: "Gates of Olympus", multiplier: "250.0x", win: 250000 },
+                    { user: "ans***", game: "Mines", multiplier: "75.0x", win: 75000 },
+                    { user: "gur***", game: "Aviator", multiplier: "148.2x", win: 148200 }
+                  ]).map((item, itemIdx) => (
+                    <div key={itemIdx} className="flex items-center gap-1.5 whitespace-nowrap shrink-0">
+                      <span className="text-stone-500 font-sans font-bold text-[8px]">{item.user}</span>
+                      <span className="text-[#FF2348] font-sans font-black tracking-tight">₹{formatBalance(item.win)}</span>
+                      <span className="text-stone-400 text-[8px]">on</span>
+                      <span className="text-white font-sans font-extrabold text-[8px]">{item.game}</span>
+                      <span className="px-1 py-0.5 text-[7px] font-sans font-black bg-emerald-500/15 text-emerald-400 border border-emerald-500/10 rounded leading-none">
+                        {item.multiplier}
+                      </span>
+                      <span className="text-stone-700 font-bold">•</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
             
-            <nav className="relative w-full h-[64px] bg-[#111111]/90 backdrop-blur-[24px] border border-zinc-800 rounded-[24px] shadow-[0_8px_30px_rgba(0,0,0,0.9)] flex items-center justify-between px-2 overflow-visible">
+            <nav className="relative w-full h-[64px] flex items-center justify-between px-2 overflow-visible">
               {/* Dark luxury background overlay */}
-              <div className="absolute inset-0 bg-gradient-to-b from-[#111111]/95 to-[#050505]/98 rounded-[24px] -z-10" />
+              <div className="absolute inset-0 bg-gradient-to-b from-[#111111]/95 to-[#050505]/98 rounded-t-[20px] -z-10" />
               
               {/* Subtle top light reflection highlight */}
               <div className="absolute top-0 inset-x-5 h-[1px] bg-gradient-to-r from-transparent via-[#FF2348]/30 to-transparent pointer-events-none" />
               
               {/* Subtle diagonal reflection shine */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-[#FF2348]/3 to-transparent pointer-events-none rounded-[24px]" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-[#FF2348]/3 to-transparent pointer-events-none rounded-t-[20px]" />
 
               {[
                 { id: 'games', label: 'Games', icon: <Gamepad2 className="w-[19px] h-[19px]" /> },
@@ -1365,7 +1390,7 @@ export default function App() {
                 if (navItem.id === 'wheel') {
                   const isWheelActive = activeTab === 'wheel';
                   return (
-                    <div key="wheel-center" className="relative -top-3 flex flex-col items-center justify-center w-[60px] select-none shrink-0 overflow-visible">
+                    <div key="wheel-center" className="relative flex flex-col items-center justify-center w-[60px] select-none shrink-0 h-full">
                       {/* Pulse ring animation container */}
                       <motion.div
                         className="absolute -inset-1 rounded-full pointer-events-none -z-10"
@@ -1393,7 +1418,7 @@ export default function App() {
                         }}
                         onMouseEnter={() => playHover()}
                         whileTap={{ scale: 0.90, translateY: 0.5 }}
-                        className={`w-[50px] h-[50px] rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 relative overflow-hidden shadow-[0_6px_18px_rgba(0,0,0,0.6),_inset_0_1px_1px_rgba(255,255,255,0.15)] border ${
+                        className={`w-[36px] h-[36px] rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 relative overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.6),_inset_0_1px_1px_rgba(255,255,255,0.15)] border ${
                           isWheelActive 
                             ? 'bg-gradient-to-tr from-[#FF2348] to-[#B4002C] border-[#FF2348]'
                             : 'bg-gradient-to-b from-[#1c1c1c] to-[#0d0d0d] border-[#FF2348]/25 hover:border-[#FF2348]/50'
@@ -1409,13 +1434,13 @@ export default function App() {
                         </svg>
                         
                         {/* Inner polished surface */}
-                        <div className={`absolute inset-1 rounded-full flex items-center justify-center transition-all duration-300 shadow-[inset_0_0.5px_0.5px_rgba(255,255,255,0.1)] ${
+                        <div className={`absolute inset-0.5 rounded-full flex items-center justify-center transition-all duration-300 shadow-[inset_0_0.5px_0.5px_rgba(255,255,255,0.1)] ${
                           isWheelActive 
                             ? 'bg-gradient-to-b from-[#3a0a14] to-[#140206] border border-black/30' 
                             : 'bg-gradient-to-b from-[#1c1c1c] to-[#080808] border border-white/5'
                         }`}>
                           {/* Embossed Compass icon */}
-                          <Compass className={`w-6 h-6 transition-all duration-300 drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.85)] ${
+                          <Compass className={`w-4 h-4 transition-all duration-300 drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.85)] ${
                             isWheelActive ? 'text-[#FF2348] scale-110' : 'text-white/60 hover:text-white'
                           }`} />
                         </div>
@@ -1425,7 +1450,7 @@ export default function App() {
                       </motion.button>
                       
                       {/* Balanced, highly readable label text */}
-                      <span className={`font-sans text-[9.5px] font-semibold tracking-wide transition-colors mt-1 ${
+                      <span className={`font-sans text-[9.5px] font-semibold tracking-wide transition-colors mt-0.5 ${
                         isWheelActive ? 'text-white font-bold' : 'text-white/65'
                       }`}>
                         Wheel

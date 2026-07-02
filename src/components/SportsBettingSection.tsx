@@ -54,8 +54,8 @@ export default function SportsBettingSection({
   onBackToLobby,
   ...props
 }: SportsBettingSectionProps) {
-  // Navigation tabs matching the bottom bar in design: Home, My Bets, Wallet, Account
-  const [activeNav, setActiveNav] = useState<'home' | 'bets' | 'wallet' | 'account'>('account');
+  // Navigation tabs matching the bottom bar in design: Home, My Bets
+  const [activeNav, setActiveNav] = useState<'home' | 'bets' | 'wallet' | 'account'>('home');
   const [showNotificationPopup, setShowNotificationPopup] = useState(false);
   
   // Custom states for interactive features
@@ -157,11 +157,7 @@ export default function SportsBettingSection({
   ];
 
   // Dummy bets for the 'My Bets' tab
-  const [myBets, setMyBets] = useState([
-    { id: 'BET-19024', match: 'IND v AUS - 3rd ODI', selection: 'Total match runs over 320.5', odd: '1.85', stake: 1000, potentialProfit: 850, status: 'LIVE', time: 'Today, 2:30 PM' },
-    { id: 'BET-18911', match: 'Real Madrid v Barcelona', selection: 'Real Madrid Win', odd: '2.10', stake: 500, potentialProfit: 550, status: 'WON', time: 'Yesterday, 9:15 PM' },
-    { id: 'BET-18750', match: 'Mumbai Indians v Chennai Super Kings', selection: 'CSK To Win', odd: '1.91', stake: 2000, potentialProfit: 1820, status: 'LOST', time: '21 Jun 2026' },
-  ]);
+  const [myBets, setMyBets] = useState<any[]>([]);
 
   const handleCopyId = () => {
     navigator.clipboard.writeText("TENZ" + (user.referralCode || "987654"));
@@ -386,18 +382,7 @@ export default function SportsBettingSection({
           
           {/* Logo segment like CRED/Apple Wallet */}
           <div className="flex items-center gap-3">
-            {onBackToLobby && (
-              <button
-                onClick={() => {
-                  playClick();
-                  onBackToLobby();
-                }}
-                className="w-10 h-10 rounded-xl bg-white hover:bg-[#F2F2F2]/80 border border-[#EDEDED] flex items-center justify-center text-[#111111] transition-all active:scale-95 cursor-pointer shadow-[0_2px_4px_rgba(0,0,0,0.015)] mr-1"
-                title="Back to Casino Games"
-              >
-                <ArrowLeft className="w-5 h-5 text-[#111111]" />
-              </button>
-            )}
+
             <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.06)] border border-[#EDEDED]">
               <div className="relative font-sans text-xl font-black italic tracking-tighter text-[#111111] flex items-center select-none">
                 T
@@ -441,40 +426,6 @@ export default function SportsBettingSection({
               </button>
             </div>
 
-            {/* Notification Bell */}
-            <div className="relative">
-              <button 
-                onClick={() => { playClick(); setShowNotificationPopup(!showNotificationPopup); }}
-                className="w-10 h-10 rounded-full bg-white border border-[#EDEDED] flex items-center justify-center text-[#111111] shadow-[0_2px_6px_rgba(0,0,0,0.02)] hover:bg-[#FAFAFA] transition-colors relative"
-              >
-                <Bell className="w-5 h-5 text-[#111111]" />
-                <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 rounded-full bg-[#FF3333]" />
-              </button>
-              
-              <AnimatePresence>
-                {showNotificationPopup && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute right-0 mt-3 w-80 bg-white border border-[#F0F0F0] rounded-2xl p-4 shadow-[0_12px_40px_rgba(0,0,0,0.08)] z-50 text-left outline-none"
-                  >
-                    <div className="flex justify-between items-center pb-2 border-b border-[#F0F0F0] mb-3">
-                      <span className="text-[9px] uppercase font-black text-[#666666] tracking-wider font-sans">Notifications</span>
-                      <button onClick={() => setShowNotificationPopup(false)} className="text-[10px] text-[#FF3333] font-bold">Close</button>
-                    </div>
-                    <div className="space-y-2 max-h-60 overflow-y-auto no-scrollbar">
-                      {bulletins.map((item, id) => (
-                        <div key={id} className="text-xs text-[#111111] leading-relaxed p-2.5 bg-[#FAFAFA] border border-[#EDEDED] rounded-xl font-medium">
-                          {item}
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
           </div>
         </div>
       </header>
@@ -493,13 +444,9 @@ export default function SportsBettingSection({
               exit={{ opacity: 0, y: -15 }}
               className="text-center py-16 px-4"
             >
-              <div className="w-16 h-16 bg-white border border-[#EDEDED] rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="w-8 h-8 text-[#FF3333]" />
+              <div className="text-neutral-400 text-xs py-8">
+                Sports markets are active. Place stakes to track your active tickets directly.
               </div>
-              <h2 className="text-lg font-black uppercase text-[#111111] tracking-tight">Tenzo VIP Sportsbook</h2>
-              <p className="text-neutral-500 text-xs mt-2 max-w-md mx-auto leading-relaxed">
-                Premium sports betting markets match selections are ready to pick. Swipe into Live matches, or claim your check-in bonuses via the <span className="font-bold text-[#FF3333] cursor-pointer" onClick={() => setActiveNav('account')}>Account Tab</span>.
-              </p>
             </motion.div>
           )}
 
@@ -518,48 +465,58 @@ export default function SportsBettingSection({
               </div>
 
               <div className="space-y-3">
-                {myBets.map((bx, idx) => (
-                  <div key={idx} className="bg-white border border-[#EDEDED] p-4 rounded-2xl shadow-sm relative overflow-hidden">
-                    {/* Status Top corner badge */}
-                    <span className={`absolute top-0 right-0 px-3 py-1 text-[8px] font-black uppercase tracking-wider rounded-bl-xl ${
-                      bx.status === 'LIVE' ? 'bg-[#FF3333]/10 text-[#FF3333]' :
-                      bx.status === 'WON' ? 'bg-red-950/20 text-red-400' :
-                      'bg-neutral-100 text-neutral-400 font-medium'
-                    }`}>
-                      {bx.status}
-                    </span>
-
-                    <span className="text-[9px] font-bold text-neutral-400 block">{bx.time} • ID: {bx.id}</span>
-                    <h4 className="text-xs font-black mt-1.5 text-neutral-800 leading-tight">{bx.match}</h4>
-                    <p className="text-xs font-medium text-neutral-500 mt-1">Pick: <span className="text-[#111111] font-bold">{bx.selection}</span> ({bx.odd}x odds)</p>
-                    
-                    <div className="flex items-center justify-between mt-3.5 pt-3 border-t border-dashed border-neutral-100 text-left">
-                      <div>
-                        <span className="text-[9px] text-neutral-400 uppercase tracking-widest block">Stake</span>
-                        <span className="text-xs font-bold font-mono">₹{bx.stake.toLocaleString()}</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-[9px] text-neutral-400 uppercase tracking-widest block">Potential Profit</span>
-                        <span className="text-xs font-black font-mono text-red-400">₹{bx.potentialProfit.toLocaleString()}</span>
-                      </div>
-                    </div>
-
-                    {bx.status === 'LIVE' && (
-                      <button 
-                        onClick={() => {
-                          playClick();
-                          // cashout operation removes wager
-                          alert("💸 Cash Out Settled! ₹1,120.00 instantly returned to your balance.");
-                          onUpdateUser({ ...user, walletBalance: user.walletBalance + 1120 });
-                          setMyBets(myBets.filter(b => b.id !== bx.id));
-                        }}
-                        className="w-full mt-3 py-1.5 bg-neutral-50 hover:bg-neutral-100 border border-neutral-200 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
-                      >
-                        ⚡ Secure Cash Out (₹1,120)
-                      </button>
-                    )}
+                {myBets.length === 0 ? (
+                  <div className="bg-white border border-[#EDEDED] p-8 rounded-2xl shadow-sm text-center">
+                    <span className="text-3xl">🎫</span>
+                    <h4 className="text-xs font-black uppercase text-neutral-400 mt-3 tracking-wider">No Active Tickets</h4>
+                    <p className="text-[11px] text-neutral-400 mt-1.5 max-w-[240px] mx-auto leading-relaxed">
+                      You haven't placed any sports bets yet. Select active markets to place stakes.
+                    </p>
                   </div>
-                ))}
+                ) : (
+                  myBets.map((bx, idx) => (
+                    <div key={idx} className="bg-white border border-[#EDEDED] p-4 rounded-2xl shadow-sm relative overflow-hidden">
+                      {/* Status Top corner badge */}
+                      <span className={`absolute top-0 right-0 px-3 py-1 text-[8px] font-black uppercase tracking-wider rounded-bl-xl ${
+                        bx.status === 'LIVE' ? 'bg-[#FF3333]/10 text-[#FF3333]' :
+                        bx.status === 'WON' ? 'bg-red-950/20 text-red-400' :
+                        'bg-neutral-100 text-neutral-400 font-medium'
+                      }`}>
+                        {bx.status}
+                      </span>
+
+                      <span className="text-[9px] font-bold text-neutral-400 block">{bx.time} • ID: {bx.id}</span>
+                      <h4 className="text-xs font-black mt-1.5 text-neutral-800 leading-tight">{bx.match}</h4>
+                      <p className="text-xs font-medium text-neutral-500 mt-1">Pick: <span className="text-[#111111] font-bold">{bx.selection}</span> ({bx.odd}x odds)</p>
+                      
+                      <div className="flex items-center justify-between mt-3.5 pt-3 border-t border-dashed border-neutral-100 text-left">
+                        <div>
+                          <span className="text-[9px] text-neutral-400 uppercase tracking-widest block">Stake</span>
+                          <span className="text-xs font-bold font-mono">₹{bx.stake.toLocaleString()}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[9px] text-neutral-400 uppercase tracking-widest block">Potential Profit</span>
+                          <span className="text-xs font-black font-mono text-red-400">₹{bx.potentialProfit.toLocaleString()}</span>
+                        </div>
+                      </div>
+
+                      {bx.status === 'LIVE' && (
+                        <button 
+                          onClick={() => {
+                            playClick();
+                            // cashout operation removes wager
+                            alert("💸 Cash Out Settled! ₹1,120.00 instantly returned to your balance.");
+                            onUpdateUser({ ...user, walletBalance: user.walletBalance + 1120 });
+                            setMyBets(myBets.filter(b => b.id !== bx.id));
+                          }}
+                          className="w-full mt-3 py-1.5 bg-neutral-50 hover:bg-neutral-100 border border-neutral-200 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                        >
+                          ⚡ Secure Cash Out (₹1,120)
+                        </button>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
             </motion.div>
           )}
@@ -924,9 +881,9 @@ export default function SportsBettingSection({
                 <div className="flex items-center justify-between pb-4 border-b border-neutral-100 mb-5">
                   <button 
                     onClick={() => { playClick(); setActiveSubTab(null); }}
-                    className="flex items-center gap-2 text-xs font-black uppercase text-neutral-600 hover:text-neutral-900 outline-none cursor-pointer"
+                    className="flex items-center gap-1.5 text-xs font-black uppercase text-neutral-600 hover:text-neutral-900 outline-none cursor-pointer"
                   >
-                    <ArrowLeft className="w-4 h-4 text-[#FF3333]" /> Back
+                    <X className="w-4 h-4 text-[#FF3333]" /> Close
                   </button>
                   <span className="text-[10px] uppercase font-black text-neutral-400 tracking-widest">
                     {activeSubTab.replace('_', ' ')} Settings
@@ -1465,9 +1422,10 @@ export default function SportsBettingSection({
                   <div className="flex items-center gap-3 mb-4">
                     <button 
                       onClick={() => { playClick(); setSelectedDepositType(null); }}
-                      className="w-8 h-8 rounded-full bg-neutral-50 border border-neutral-100 flex items-center justify-center mr-1"
+                      className="w-8 h-8 rounded-full bg-neutral-50 border border-neutral-100 flex items-center justify-center mr-1 cursor-pointer hover:bg-neutral-100 transition-colors"
+                      title="Cancel & Choose Another"
                     >
-                      <ArrowLeft className="w-4 h-4 text-neutral-600" />
+                      <X className="w-4 h-4 text-neutral-600" />
                     </button>
                     <div>
                       <h3 className="text-sm font-black text-neutral-950 uppercase tracking-tight">
@@ -1690,9 +1648,7 @@ export default function SportsBettingSection({
       <nav className="fixed bottom-0 inset-x-0 mx-auto w-full max-w-md z-45 bg-white/90 backdrop-blur-3xl border-t border-[#F0F0F0] px-3 py-2.5 flex items-center justify-between shadow-[0_-10px_35px_rgba(0,0,0,0.03)] h-16">
         {[
           { id: 'home', label: 'Home', icon: '🏠' },
-          { id: 'bets', label: 'My Bets', icon: '🎫' },
-          { id: 'wallet', label: 'Wallet', icon: '💳' },
-          { id: 'account', label: 'Account', isAvatar: true }
+          { id: 'bets', label: 'My Bets', icon: '🎫' }
         ].map((item) => {
           const isSelected = activeNav === item.id;
           return (
@@ -1708,15 +1664,9 @@ export default function SportsBettingSection({
                 isSelected ? 'text-[#FF3333]' : 'text-neutral-500'
               }`}
             >
-              {item.isAvatar ? (
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center border transition-transform bg-zinc-800 text-zinc-400 font-mono font-bold text-[9px] ${isSelected ? 'border-[#FF3333] scale-105' : 'border-[#EDEDED] opacity-70 group-hover:scale-102'}`}>
-                  {user.username ? user.username.charAt(0).toUpperCase() : "U"}
-                </div>
-              ) : (
-                <span className={`text-[15px] filter transition-transform ${isSelected ? 'scale-105' : 'opacity-70'}`}>
-                  {item.icon}
-                </span>
-              )}
+              <span className={`text-[15px] filter transition-transform ${isSelected ? 'scale-105' : 'opacity-70'}`}>
+                {item.icon}
+              </span>
               <span className={`font-sans text-[10px] tracking-wide transition-all ${isSelected ? 'font-semibold' : 'font-normal'}`}>
                 {item.label}
               </span>

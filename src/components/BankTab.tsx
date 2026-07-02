@@ -1272,23 +1272,25 @@ export default function BankTab({
     <div className={`space-y-6 max-w-md mx-auto ${isSportsTheme ? 'text-[#111111] font-sans' : 'text-white'}`}>
       
       {/* Cohesive Navigation Header */}
-      <div className={`flex items-center justify-between pb-3 border-b ${isSportsTheme ? 'border-neutral-200' : 'border-white/10'}`}>
-        <button
-          type="button"
-          onClick={() => {
-            playClick();
-            if (onBack) onBack();
-          }}
-          className={`flex items-center gap-1.5 py-1 px-3 rounded-xl border text-xs font-black uppercase tracking-wider transition-all cursor-pointer select-none active:scale-95 ${
-            isSportsTheme
-              ? 'bg-white hover:bg-neutral-50 border-neutral-200 text-neutral-800 shadow-sm'
-              : 'bg-white/5 hover:bg-white/10 border-white/5 text-stone-300'
-          }`}
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back</span>
-        </button>
-      </div>
+      {activeTab !== 'deposit' && (
+        <div className={`flex items-center justify-between pb-3 border-b ${isSportsTheme ? 'border-neutral-200' : 'border-white/10'}`}>
+          <button
+            type="button"
+            onClick={() => {
+              playClick();
+              if (onBack) onBack();
+            }}
+            className={`flex items-center gap-1.5 py-1 px-3 rounded-xl border text-xs font-black uppercase tracking-wider transition-all cursor-pointer select-none active:scale-95 ${
+              isSportsTheme
+                ? 'bg-white hover:bg-neutral-50 border-neutral-200 text-neutral-800 shadow-sm'
+                : 'bg-white/5 hover:bg-white/10 border-white/5 text-stone-300'
+            }`}
+          >
+            <X className="w-3.5 h-3.5" />
+            <span>Cancel</span>
+          </button>
+        </div>
+      )}
       
       {/* Main Bank Action Form or UPI QR Interface */}
       {activeTab === 'deposit' ? (

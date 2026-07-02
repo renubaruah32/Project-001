@@ -429,74 +429,126 @@ export default function AccountTab({
         ))}
       </div>
 
-      <div className="relative z-10 space-y-5 px-1 pt-6">
-        {/* Spacer below the header (approx 10-15% of screen height) */}
-        <div className="h-[12vh] w-full pointer-events-none" id="header-spacer" />
+      <div className="relative z-10 space-y-4 px-1 pt-2">
         
-        {/* ==================== 5. WITHDRAW CARD ==================== */}
-        <div className="glass-panel p-5 rounded-[20px] border border-[#ff3b4d]/10 bg-black/60 relative overflow-hidden backdrop-blur-md shadow-xl">
-          <div className="flex items-center justify-between border-b border-white/5 pb-3">
-            <div>
-              <span className="text-[9px] text-[#ff3b4d] font-bold uppercase tracking-wider block">Withdrawable Balance</span>
-              <span className="font-sans font-extrabold text-xl text-white">
-                {user.isBalanceLoading ? 'Loading...' : formatCurrency(user.walletBalance)}
+        {/* ==================== 5. WITHDRAW & DEPOSIT ATM CARD ==================== */}
+        <div className="relative overflow-hidden rounded-[24px] border border-zinc-800 bg-gradient-to-br from-[#1a1c23] via-[#0d0e12] to-[#040405] p-6 shadow-[0_30px_70px_-15px_rgba(0,0,0,0.98),_inset_0_1px_1px_rgba(255,255,255,0.08)] select-none">
+          {/* Subtle Card Reflective Diagonal Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent pointer-events-none" />
+          
+          {/* World Elite Metallic Circular Track Overlay */}
+          <div className="absolute -right-12 -bottom-12 w-48 h-48 rounded-full border border-zinc-500/[0.03] pointer-events-none" />
+          <div className="absolute -right-20 -bottom-20 w-72 h-72 rounded-full border border-zinc-500/[0.04] pointer-events-none animate-pulse" style={{ animationDuration: '10s' }} />
+
+          {/* Holographic Security Vertical Strip */}
+          <div className="absolute left-[30%] top-0 bottom-0 w-[1.5px] bg-gradient-to-b from-transparent via-zinc-400/[0.06] to-transparent pointer-events-none" />
+
+          {/* Card Brand Header */}
+          <div className="flex items-start justify-between">
+            <div className="space-y-0.5">
+              <span className="text-[11px] text-white font-black uppercase tracking-[0.25em] block leading-none">
+                TENZO BANK
               </span>
-            </div>
-            <div className="text-right flex flex-col items-end justify-center">
-              <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider block">Daily Withdrawals</span>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="font-sans font-black text-xs text-white">
-                  {dailyWithdrawalsDone} / 3
-                </span>
-                <span className="text-[9px] text-zinc-500 font-semibold uppercase">Done</span>
-              </div>
-              <span className="font-sans font-extrabold text-[9px] text-[#ff3b4d] bg-[#ff3b4d]/10 border border-[#ff3b4d]/20 px-1.5 py-0.5 rounded-md mt-1.5 uppercase tracking-wider">
-                Max 3 / Day
+              <span className="text-[6.5px] text-zinc-400 font-mono font-bold uppercase tracking-[0.25em] block leading-none">
+                WORLD ELITE™
               </span>
             </div>
           </div>
 
-          <button
-            onClick={() => { if (onNavigate) onNavigate('bank', 'withdraw'); }}
-            onMouseEnter={() => playHover()}
-            className="w-full mt-3 py-3 rounded-xl bg-gradient-to-r from-[#ff3b4d] to-[#160000] hover:from-[#ff5565] border border-[#ff3b4d]/30 text-white font-extrabold text-xs uppercase tracking-widest transition-all hover:shadow-[0_0_15px_rgba(255,59,77,0.25)] flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
-          >
-            <span>Withdraw Now</span>
-            <ArrowUpRight className="w-4 h-4 text-white animate-bounce-horizontal" />
-          </button>
+          {/* Main Card Balance Area */}
+          <div className="mt-6 space-y-1">
+            <span className="text-[8px] text-zinc-400 font-bold uppercase tracking-[0.2em] block leading-none">
+              BALANCE
+            </span>
+            <span className="font-sans font-black text-3xl text-white tracking-tight drop-shadow-[0_2px_8px_rgba(255,255,255,0.15)] block">
+              {user.isBalanceLoading ? 'Loading...' : formatCurrency(user.walletBalance)}
+            </span>
+          </div>
+
+          {/* EMV Microchip */}
+          <div className="flex items-center justify-between mt-6">
+            <div className="flex items-center gap-3">
+              {/* Silver-Brushed EMV Microchip with fine engravings */}
+              <div className="w-10 h-7.5 rounded-lg bg-gradient-to-br from-zinc-200 via-zinc-400 to-zinc-600 p-[1.5px] relative overflow-hidden shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.4),_0_3px_8px_rgba(0,0,0,0.6)] border border-zinc-900/10">
+                <div className="w-full h-full bg-gradient-to-tr from-zinc-400 via-zinc-300 to-zinc-500 rounded-[5px] relative p-0.5">
+                  <div className="flex justify-between h-full w-full opacity-60">
+                    <div className="w-[30%] border-r border-b border-zinc-800/40" />
+                    <div className="w-[40%] border-r border-b border-zinc-800/40" />
+                    <div className="w-[30%] border-b border-zinc-800/40" />
+                  </div>
+                  <div className="absolute inset-[6px] border border-zinc-800/20 rounded-[4px]" />
+                  <div className="absolute left-[48%] top-0 bottom-0 w-[1px] bg-zinc-800/25" />
+                  <div className="absolute top-[48%] left-0 right-0 h-[1px] bg-zinc-800/25" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ==================== PREMIUM DUAL-ACTION TRANSACTION BUTTONS INSIDE CARD ==================== */}
+          <div className="grid grid-cols-2 gap-3.5 mt-5 pt-4 border-t border-white/[0.04]">
+            {/* DEPOSIT FUNDS BUTTON */}
+            <button
+              onClick={() => { playClick(); if (onNavigate) onNavigate('bank', 'deposit'); }}
+              onMouseEnter={() => playHover()}
+              className="py-3 px-4 rounded-xl bg-gradient-to-b from-emerald-600 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700 border border-emerald-500/25 text-white font-sans font-extrabold text-[11px] uppercase tracking-wider transition-all hover:shadow-[0_4px_15px_rgba(16,185,129,0.25)] flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
+            >
+              <ArrowDownLeft className="w-4 h-4 text-emerald-200" />
+              <span>DEPOSIT CASH</span>
+            </button>
+
+            {/* WITHDRAW FUNDS BUTTON */}
+            <button
+              onClick={() => { playClick(); if (onNavigate) onNavigate('bank', 'withdraw'); }}
+              onMouseEnter={() => playHover()}
+              className="py-3 px-4 rounded-xl bg-gradient-to-b from-[#ff3b4d] to-[#b4002c] hover:from-[#ff5565] hover:to-[#d00030] border border-[#ff3b4d]/30 text-white font-sans font-extrabold text-[11px] uppercase tracking-wider transition-all hover:shadow-[0_4px_15px_rgba(255,59,77,0.25)] flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
+            >
+              <span>WITHDRAW NOW</span>
+              <ArrowUpRight className="w-4 h-4 text-red-200" />
+            </button>
+          </div>
         </div>
 
         {/* ==================== 4. QUICK ACTIONS ==================== */}
-        <div className="grid grid-cols-4 gap-2.5 pt-1">
+        <div className="grid grid-cols-2 gap-3 pt-1">
           {[
             { 
-              label: 'Deposit', 
-              icon: <ArrowDownLeft className="w-5 h-5 text-emerald-400" />,
-              action: () => { if (onNavigate) onNavigate('bank', 'deposit'); }
-            },
-            { 
-              label: 'Withdraw', 
-              icon: <ArrowUpRight className="w-5 h-5 text-amber-400" />,
-              action: () => { if (onNavigate) onNavigate('bank', 'withdraw'); }
-            },
-            { 
-              label: 'Bank', 
+              label: 'Bank Account Details', 
               icon: <Landmark className="w-5 h-5 text-blue-400" />,
               action: () => { playClick(); setActiveOverlay('bank_details'); }
             },
             { 
-              label: 'History', 
+              label: 'Immutable Ledger Logs', 
               icon: <History className="w-5 h-5 text-[#ff3b4d]" />,
               action: () => { playClick(); setActiveOverlay('history'); }
+            },
+            { 
+              label: 'P2P Send / Transfer', 
+              icon: <ArrowLeftRight className="w-5 h-5 text-sky-400" />,
+              action: () => { playClick(); setActiveOverlay('transfer'); }
+            },
+            { 
+              label: 'Daily Streak Rewards', 
+              icon: <Gift className="w-5 h-5 text-emerald-400" />,
+              action: () => { playClick(); setActiveOverlay('rewards'); }
+            },
+            { 
+              label: 'KYC Compliance Status', 
+              icon: <ShieldCheck className="w-5 h-5 text-indigo-400" />,
+              action: () => { playClick(); setActiveOverlay('kyc'); }
+            },
+            { 
+              label: 'VIP Concierge Desk', 
+              icon: <Headphones className="w-5 h-5 text-pink-400" />,
+              action: () => { playClick(); setActiveOverlay('support'); }
             }
           ].map((act, idx) => (
             <button
               key={idx}
               onClick={act.action}
               onMouseEnter={() => playHover()}
-              className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-[20px] bg-black/50 border border-white/5 active:scale-95 transition-all text-center group cursor-pointer hover:border-[#ff3b4d]/25 hover:bg-[#160000]/35"
+              className="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-[20px] bg-black/50 border border-white/5 active:scale-95 transition-all text-center group cursor-pointer hover:border-[#ff3b4d]/25 hover:bg-[#160000]/35"
             >
-              <div className="p-2 bg-white/5 rounded-xl group-hover:bg-[#ff3b4d]/10 transition-colors">
+              <div className="p-2.5 bg-white/5 rounded-xl group-hover:bg-[#ff3b4d]/10 transition-colors">
                 {act.icon}
               </div>
               <span className="font-sans text-[11px] font-bold text-zinc-300 group-hover:text-white transition-colors">
@@ -505,6 +557,15 @@ export default function AccountTab({
             </button>
           ))}
         </div>
+
+        {/* ==================== RETURN TO GAME LOBBY BUTTON ==================== */}
+        <button
+          onClick={() => { playClick(); if (onNavigate) onNavigate('games'); }}
+          onMouseEnter={() => playHover()}
+          className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#FF2A2A] to-[#D00030] hover:brightness-110 border border-red-500/35 text-white font-sans font-bold text-[11px] uppercase tracking-[0.15em] transition-all flex items-center justify-center cursor-pointer active:scale-[0.98] mt-4 shadow-md shadow-red-950/20"
+        >
+          <span>RETURN TO CASINO & SPORTS LOBBY</span>
+        </button>
 
 
 

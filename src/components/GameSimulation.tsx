@@ -1293,10 +1293,10 @@ export default function GameSimulation({ game, user, onUpdateUser, onClose, onAd
           <div className="flex items-center gap-3">
             <button 
               onClick={onClose}
-              className="flex items-center gap-1 text-neutral-300 hover:text-white font-sans text-xs font-bold leading-none cursor-pointer"
+              className="p-1 hover:bg-neutral-800 rounded-full text-neutral-400 hover:text-white transition-colors cursor-pointer flex items-center justify-center"
+              title="Close Game"
             >
-              <span className="text-lg font-light text-neutral-400">‹</span>
-              <span>Back</span>
+              <X className="w-4 h-4" />
             </button>
             <div className="h-4.5 w-px bg-neutral-800" />
             <div className="flex items-center gap-1">
